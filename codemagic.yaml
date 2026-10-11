@@ -297,7 +297,7 @@ workflows:
   # ---------------------------------------------------------------------------
   ios-release:
     name: iOS release (TestFlight)
-    instance_type: mac_mini_m2
+    instance_type: mac_mini_m4 # M2 queue never picked up builds (2026-10-11); M4 is billed from minute 1
     max_build_duration: 90
     integrations:
       app_store_connect: codemagic_asc_key
