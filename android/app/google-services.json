@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "332944087519",
+    "project_id": "mfb-think-tank",
+    "storage_bucket": "mfb-think-tank.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:332944087519:android:1a0e4bb7e142ed87890c6a",
+        "android_client_info": {
+          "package_name": "com.mfbservicesinc.mfb_think_tank"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC-bxV1nZS9woDvpzLIDJN66IK-dFghrCI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

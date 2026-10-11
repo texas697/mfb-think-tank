@@ -2,6 +2,9 @@ import java.util.Properties
 
 plugins {
     id("com.android.application")
+    // START: FlutterFire Configuration
+    id("com.google.gms.google-services")
+    // END: FlutterFire Configuration
     // `flutterfire configure` inserts the Google Services plugin directly below
     // the line above (and registers its version in settings.gradle.kts), so
     // keep that line exactly as is.

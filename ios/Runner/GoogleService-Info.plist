@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>API_KEY</key>
+	<string>AIzaSyCzVdOueevfH0Ot07JeiyRN-AEAifkqXew</string>
+	<key>GCM_SENDER_ID</key>
+	<string>332944087519</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.mfbservicesinc.mfbThinkTank</string>
+	<key>PROJECT_ID</key>
+	<string>mfb-think-tank</string>
+	<key>STORAGE_BUCKET</key>
+	<string>mfb-think-tank.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:332944087519:ios:010fd9a44b281589890c6a</string>
+</dict>
+</plist>
