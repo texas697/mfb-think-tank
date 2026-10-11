@@ -62,7 +62,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '332944087519',
     projectId: 'mfb-think-tank',
     storageBucket: 'mfb-think-tank.firebasestorage.app',
-    androidClientId: '332944087519-elkq96ca250eeggngbve1q98u90lo0qe.apps.googleusercontent.com',
+    androidClientId: '332944087519-b1rl0v45oonf27f31d886ecrcmdkrr77.apps.googleusercontent.com',
     iosClientId: '332944087519-f63tk86jgu5bn1sraj18djtkp6khevcq.apps.googleusercontent.com',
     iosBundleId: 'com.mfbservicesinc.mfbThinkTank',
   );
