@@ -1,0 +1,372 @@
+# =============================================================================
+# Codemagic CI/CD for this Flutter + Firebase app.
+# Docs: https://docs.codemagic.io/yaml-quick-start/building-a-flutter-app/
+#
+# Workflows
+#   ci               PRs into main and pushes to main: analyze + test (no signing)
+#   android-release  tag v*: signed AAB, uploaded to Google Play (internal track, draft)
+#   ios-release      tag v*: signed IPA, uploaded to TestFlight
+#   release-all      manual only: both stores from one macOS build
+#
+# One-time setup in the Codemagic UI (Team settings unless noted):
+#   1. Integrations > Developer Portal (App Store Connect): add an App Store
+#      Connect API key (App Manager role) and name it exactly `codemagic_asc_key`.
+#   2. codemagic.yaml settings > Code signing identities > Android keystores:
+#      upload the upload keystore (scripts/create_upload_keystore.sh) with the
+#      reference name `upload_keystore`.
+#   3. App > Environment variables (or Team > Global variables):
+#      - group `google_play`:
+#          GCLOUD_SERVICE_ACCOUNT_CREDENTIALS  (secret) Play Console service
+#                                              account JSON key, pasted as-is
+#      - group `app_store_signing`:
+#          CERTIFICATE_PRIVATE_KEY             (secret) RSA private key used to
+#              create/reuse your Apple Distribution certificate. Generate once
+#              and reuse for every app:
+#              ssh-keygen -t rsa -b 2048 -m PEM -f cert_key -q -N ""
+#              then paste the contents of `cert_key`.
+#
+# Per-app setup (outside Codemagic):
+#   - Apple Developer portal: register the App ID ($BUNDLE_ID) with the
+#     "Sign In with Apple" capability enabled, then create the app record in
+#     App Store Connect with that bundle id.
+#   - Google Play Console: create the app and upload the FIRST AAB manually
+#     (Google's API cannot do the very first upload). Grant the service
+#     account access to the app.
+#   - Run scripts/configure_firebase.sh and commit its output
+#     (lib/firebase_options.dart, android/app/google-services.json,
+#      ios/Runner/GoogleService-Info.plist, ios/Runner/Info.plist,
+#      config/app_config.json). Release builds refuse to run without it.
+#
+# Releasing: bump `version:` in pubspec.yaml (the build number part is ignored
+# on CI; it is derived from the stores), commit, then `git tag v1.2.3 && git
+# push --tags`.
+#
+# NOTE ON INSTANCES: linux_x2 needs billing enabled on your Codemagic team.
+# On the free plan only mac_mini_m2 is available: change `instance_type` of
+# `ci` and `android-release` to mac_mini_m2 (Android builds fine on macOS).
+# =============================================================================
+
+definitions:
+  # App ids. Set from one input when the app was created from
+  # flutter-firebase-template (scripts/new_app.sh).
+  app_ids:
+    - &package_name "com.mfbservicesinc.mfb_think_tank" # Android applicationId
+    - &bundle_id "com.mfbservicesinc.mfbThinkTank"     # iOS bundle id (no underscores allowed)
+
+  triggers:
+    release_tag: &release_tag_trigger
+      events:
+        - tag
+      tag_patterns:
+        - pattern: "v*"
+          include: true
+
+  caches:
+    android: &android_cache
+      cache_paths:
+        - $FLUTTER_ROOT/.pub-cache
+        - $HOME/.gradle/caches
+    ios: &ios_cache
+      cache_paths:
+        - $FLUTTER_ROOT/.pub-cache
+        - $HOME/Library/Caches/org.swift.swiftpm
+
+  artifacts:
+    android: &android_artifacts
+      - build/**/outputs/**/*.aab
+      - build/**/outputs/**/mapping.txt
+      - flutter_drive.log
+    ios: &ios_artifacts
+      - build/ios/ipa/*.ipa
+      - build/ios/archive/Runner.xcarchive/dSYMs/*.dSYM
+      - /tmp/xcodebuild_logs/*.log
+      - flutter_drive.log
+
+  scripts:
+    - &pub_get
+      name: Get Flutter packages
+      script: flutter pub get
+
+    - &check_version_tag
+      name: Check tag matches pubspec version
+      script: |
+        # Warns (does not fail) when the pushed tag does not match pubspec.yaml.
+        if [ -n "${CM_TAG:-}" ]; then
+          PUBSPEC_VERSION=$(sed -n 's/^version:[[:space:]]*\([^+[:space:]]*\).*/\1/p' pubspec.yaml)
+          if [ "$CM_TAG" != "v$PUBSPEC_VERSION" ]; then
+            echo "WARNING: tag $CM_TAG does not match pubspec version $PUBSPEC_VERSION"
+          fi
+        fi
+
+    - &check_firebase_common
+      name: Check Firebase is configured
+      script: |
+        set -e
+        if grep -q "configure_firebase.sh" lib/firebase_options.dart; then
+          echo "lib/firebase_options.dart is still the template placeholder."
+          echo "Run scripts/configure_firebase.sh locally and commit the result."
+          exit 1
+        fi
+
+    - &check_firebase_android
+      name: Check Android Firebase files
+      script: |
+        set -e
+        test -f android/app/google-services.json || {
+          echo "android/app/google-services.json is missing. Run scripts/configure_firebase.sh and commit it."
+          exit 1
+        }
+
+    - &check_firebase_ios
+      name: Check iOS Firebase files
+      script: |
+        set -e
+        test -f ios/Runner/GoogleService-Info.plist || {
+          echo "ios/Runner/GoogleService-Info.plist is missing. Run scripts/configure_firebase.sh and commit it."
+          exit 1
+        }
+        if grep -q "_PLACEHOLDER" ios/Runner/Info.plist; then
+          echo "ios/Runner/Info.plist still contains Google Sign-In placeholders. Run scripts/configure_firebase.sh and commit it."
+          exit 1
+        fi
+
+    - &check_android_keystore
+      name: Check Android keystore
+      script: |
+        # Without this the Gradle build would silently fall back to the debug key.
+        if [ -z "${CM_KEYSTORE_PATH:-}" ] || [ ! -f "$CM_KEYSTORE_PATH" ]; then
+          echo "No keystore. Upload it in Codemagic as 'upload_keystore' (android_signing)."
+          exit 1
+        fi
+
+    - &build_aab
+      name: Build Android App Bundle
+      script: |
+        set -euo pipefail
+        # versionCode must be unique across ALL Play tracks, so do not filter by track.
+        if LATEST=$(google-play get-latest-build-number \
+              --package-name "$PACKAGE_NAME" \
+              --credentials=@env:GCLOUD_SERVICE_ACCOUNT_CREDENTIALS); then
+          :
+        else
+          echo "WARNING: could not read the latest Play build number; starting from 0."
+          LATEST=0
+        fi
+        case "$LATEST" in ''|*[!0-9]*) LATEST=0 ;; esac
+        BUILD_NUMBER=$((LATEST + 1))
+        echo "Building versionCode $BUILD_NUMBER"
+        flutter build appbundle --release \
+          --build-number="$BUILD_NUMBER" \
+          --dart-define-from-file=config/app_config.json
+
+    - &ios_code_signing
+      name: Set up iOS code signing
+      script: |
+        set -euo pipefail
+        # Uses the App Store Connect integration credentials (exported by
+        # `integrations.app_store_connect`) and CERTIFICATE_PRIVATE_KEY.
+        # Creates the distribution certificate / App Store profile if missing.
+        keychain initialize
+        app-store-connect fetch-signing-files "$BUNDLE_ID" \
+          --type IOS_APP_STORE \
+          --create
+        keychain add-certificates
+        # Applies the profiles to the Xcode project and writes
+        # /Users/builder/export_options.plist.
+        xcode-project use-profiles
+
+    - &build_ipa
+      name: Build IPA
+      script: |
+        set -euo pipefail
+        # Resolve the numeric App Store Connect app id from the bundle id,
+        # unless APP_STORE_APPLE_ID is set explicitly.
+        APP_ID="${APP_STORE_APPLE_ID:-}"
+        if [ -z "$APP_ID" ]; then
+          APP_ID=$(app-store-connect apps list \
+              --bundle-id-identifier "$BUNDLE_ID" \
+              --strict-match-identifier \
+              --json \
+            | python3 -c 'import json,sys; apps=json.load(sys.stdin); print(apps[0]["id"] if apps else "")')
+        fi
+        if [ -z "$APP_ID" ]; then
+          echo "No App Store Connect app found for $BUNDLE_ID. Create the app record first."
+          exit 1
+        fi
+        if LATEST=$(app-store-connect get-latest-testflight-build-number "$APP_ID"); then
+          :
+        else
+          echo "WARNING: no TestFlight builds found; starting from 0."
+          LATEST=0
+        fi
+        case "$LATEST" in ''|*[!0-9]*) LATEST=0 ;; esac
+        BUILD_NUMBER=$((LATEST + 1))
+        echo "Building CFBundleVersion $BUILD_NUMBER"
+        flutter build ipa --release \
+          --build-number="$BUILD_NUMBER" \
+          --dart-define-from-file=config/app_config.json \
+          --export-options-plist=/Users/builder/export_options.plist
+
+  publishing:
+    google_play: &google_play_publishing
+      credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+      track: internal
+      # Required while the app has never been published (Play "draft app").
+      # Once the app is live you may set this to false to roll out directly.
+      submit_as_draft: true
+    app_store_connect: &app_store_connect_publishing
+      auth: integration
+      # Upload alone makes the build available to INTERNAL TestFlight testers.
+      # Set true (plus beta_groups) only for EXTERNAL testing; that requires
+      # Test Information + a demo account in App Store Connect (Beta App Review).
+      submit_to_testflight: false
+      # beta_groups:
+      #   - Beta testers
+      submit_to_app_store: false
+
+workflows:
+  # ---------------------------------------------------------------------------
+  ci:
+    name: CI (analyze + test)
+    instance_type: linux_x2 # needs billing; use mac_mini_m2 on the free plan
+    max_build_duration: 30
+    environment:
+      flutter: stable
+    cache:
+      cache_paths:
+        - $FLUTTER_ROOT/.pub-cache
+    triggering:
+      events:
+        - push
+        - pull_request
+      branch_patterns:
+        - pattern: main
+          include: true
+          source: true # push: builds main
+        - pattern: main
+          include: true
+          source: false # pull_request: builds PRs targeting main
+      cancel_previous_builds: true
+    when:
+      changeset:
+        excludes:
+          - "**/*.md"
+          - "docs/**"
+    scripts:
+      - *pub_get
+      - name: Analyze
+        script: flutter analyze
+      - name: Test
+        script: flutter test --dart-define-from-file=config/app_config.json
+    # publishing:
+    #   email:
+    #     recipients:
+    #       - you@example.com
+    #     notify:
+    #       success: false
+    #       failure: true
+
+  # ---------------------------------------------------------------------------
+  android-release:
+    name: Android release (Google Play internal)
+    instance_type: linux_x2 # needs billing; use mac_mini_m2 on the free plan
+    max_build_duration: 60
+    environment:
+      flutter: stable
+      android_signing:
+        - upload_keystore
+      groups:
+        - google_play
+      vars:
+        PACKAGE_NAME: *package_name
+    cache: *android_cache
+    triggering: *release_tag_trigger
+    scripts:
+      - *check_version_tag
+      - *check_firebase_common
+      - *check_firebase_android
+      - *check_android_keystore
+      - *pub_get
+      - *build_aab
+    artifacts: *android_artifacts
+    publishing:
+      google_play: *google_play_publishing
+
+  # ---------------------------------------------------------------------------
+  ios-release:
+    name: iOS release (TestFlight)
+    instance_type: mac_mini_m2
+    max_build_duration: 90
+    integrations:
+      app_store_connect: codemagic_asc_key
+    environment:
+      flutter: stable
+      xcode: latest
+      # No CocoaPods: the project uses Swift Package Manager (Flutter default),
+      # and every plugin in pubspec.yaml supports it. If you later add a
+      # CocoaPods-only plugin, Flutter generates ios/Podfile and runs
+      # `pod install` by itself during `flutter build ipa`.
+      groups:
+        - app_store_signing
+      vars:
+        BUNDLE_ID: *bundle_id
+        # Optional: numeric Apple ID of the app (App Store Connect > App
+        # Information). Looked up from BUNDLE_ID when empty.
+        APP_STORE_APPLE_ID: ""
+    cache: *ios_cache
+    triggering: *release_tag_trigger
+    scripts:
+      - *check_version_tag
+      - *check_firebase_common
+      - *check_firebase_ios
+      - *pub_get
+      - *ios_code_signing
+      - *build_ipa
+    artifacts: *ios_artifacts
+    publishing:
+      app_store_connect: *app_store_connect_publishing
+
+  # ---------------------------------------------------------------------------
+  # Start manually from the Codemagic UI to ship both stores in one build.
+  release-all:
+    name: Release both stores (manual)
+    instance_type: mac_mini_m2
+    max_build_duration: 120
+    integrations:
+      app_store_connect: codemagic_asc_key
+    environment:
+      flutter: stable
+      xcode: latest
+      android_signing:
+        - upload_keystore
+      groups:
+        - google_play
+        - app_store_signing
+      vars:
+        PACKAGE_NAME: *package_name
+        BUNDLE_ID: *bundle_id
+        APP_STORE_APPLE_ID: ""
+    cache:
+      cache_paths:
+        - $FLUTTER_ROOT/.pub-cache
+        - $HOME/.gradle/caches
+        - $HOME/Library/Caches/org.swift.swiftpm
+    scripts:
+      - *check_version_tag
+      - *check_firebase_common
+      - *check_firebase_android
+      - *check_firebase_ios
+      - *check_android_keystore
+      - *pub_get
+      - *build_aab
+      - *ios_code_signing
+      - *build_ipa
+    artifacts:
+      - build/**/outputs/**/*.aab
+      - build/**/outputs/**/mapping.txt
+      - build/ios/ipa/*.ipa
+      - build/ios/archive/Runner.xcarchive/dSYMs/*.dSYM
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      google_play: *google_play_publishing
+      app_store_connect: *app_store_connect_publishing
