@@ -311,8 +311,9 @@ workflows:
       vars:
         BUNDLE_ID: *bundle_id
         # Optional: numeric Apple ID of the app (App Store Connect > App
-        # Information). Looked up from BUNDLE_ID when empty.
-        APP_STORE_APPLE_ID: ""
+        # Information). Looked up from BUNDLE_ID when unset. Codemagic rejects
+        # empty-string vars, so leave this commented out unless you set a value.
+        # APP_STORE_APPLE_ID: 1234567890
     cache: *ios_cache
     triggering: *release_tag_trigger
     scripts:
@@ -345,7 +346,7 @@ workflows:
       vars:
         PACKAGE_NAME: *package_name
         BUNDLE_ID: *bundle_id
-        APP_STORE_APPLE_ID: ""
+        # APP_STORE_APPLE_ID: 1234567890 # optional, see ios-release
     cache:
       cache_paths:
         - $FLUTTER_ROOT/.pub-cache
