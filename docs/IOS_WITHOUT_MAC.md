@@ -39,8 +39,8 @@ record must exist before the first build. (You can pin it with `APP_STORE_APPLE_
 1. App Store Connect → **Users and Access → Integrations → App Store Connect API →
    Team Keys → +**. Name it `codemagic`, access **App Manager**.
 2. Download the `.p8` (possible **once**) and note the **Issuer ID** and **Key ID**.
-3. Codemagic → **Team settings → Team integrations → Developer Portal → Manage keys →
-   Add key**. Name it exactly **`codemagic_asc_key`** (the name `codemagic.yaml` uses),
+3. Codemagic → **Settings** (personal account) or **Team settings** (team) →
+   **Integrations → Developer Portal → Manage keys → Add key**. Name it exactly **`codemagic_asc_key`** (the name `codemagic.yaml` uses),
    enter Issuer ID + Key ID, upload the `.p8`.
 
 One key serves every app in your Apple team, so this is a one-time step.
@@ -58,8 +58,9 @@ ssh-keygen -t rsa -b 2048 -m PEM -f cert_key -q -N ""
 ```
 
 Codemagic → your app → **Environment variables**: add `CERTIFICATE_PRIVATE_KEY` with the
-contents of `cert_key` (mark it **Secret**) to a group named **`app_store_signing`**. Better:
-add the group under **Team settings → Global variables and secrets** so every app shares it.
+contents of `cert_key` (mark it **Secret**) to a group named **`app_store_signing`**. On a team
+account you can instead add the group under **Team settings → Global variables and secrets**
+so every app shares it (personal accounts don't have global variables).
 Store `cert_key` in your password manager too.
 
 Notes:

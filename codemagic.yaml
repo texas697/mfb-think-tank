@@ -8,13 +8,15 @@
 #   ios-release      tag v*: signed IPA, uploaded to TestFlight
 #   release-all      manual only: both stores from one macOS build
 #
-# One-time setup in the Codemagic UI (Team settings unless noted):
+# One-time setup in the Codemagic UI (sidebar "Settings" on a personal account,
+# "Team settings" on a team; the app must use YAML configuration, not the
+# Workflow Editor):
 #   1. Integrations > Developer Portal (App Store Connect): add an App Store
 #      Connect API key (App Manager role) and name it exactly `codemagic_asc_key`.
 #   2. codemagic.yaml settings > Code signing identities > Android keystores:
 #      upload the upload keystore (scripts/create_upload_keystore.sh) with the
 #      reference name `upload_keystore`.
-#   3. App > Environment variables (or Team > Global variables):
+#   3. App > Environment variables (or Team > Global variables, teams only):
 #      - group `google_play`:
 #          GCLOUD_SERVICE_ACCOUNT_CREDENTIALS  (secret) Play Console service
 #                                              account JSON key, pasted as-is

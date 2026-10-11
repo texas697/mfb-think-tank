@@ -17,15 +17,16 @@ marketing version (`version: 1.2.3+1` → `1.2.3`).
 > **Free plan:** Linux instances need billing enabled on the team. On the free plan change
 > `instance_type` of `ci` and `android-release` to `mac_mini_m2`.
 
-## One-time team setup (shared by all your apps)
+## One-time account setup (shared by all your apps)
 
-All under **Codemagic → Team settings**:
+Personal accounts and teams have the same sections under different names: on a
+**personal account** use **Settings** in the left sidebar; on a **team** use **Team settings**.
 
-1. **Team integrations → Developer Portal → Manage keys → Add key**: App Store Connect API
+1. **Integrations → Developer Portal → Manage keys → Add key**: App Store Connect API
    key named **`codemagic_asc_key`** ([IOS_WITHOUT_MAC.md §4](IOS_WITHOUT_MAC.md#4-app-store-connect-api-key--codemagic)).
-2. **Global variables and secrets**, group **`app_store_signing`**: `CERTIFICATE_PRIVATE_KEY`
+2. Group **`app_store_signing`**: `CERTIFICATE_PRIVATE_KEY`
    (secret) — see [IOS_WITHOUT_MAC.md §5](IOS_WITHOUT_MAC.md#5-signing-the-certificate-private-key).
-3. **Global variables and secrets**, group **`google_play`**:
+3. Group **`google_play`**:
    `GCLOUD_SERVICE_ACCOUNT_CREDENTIALS` (secret) — the full JSON key of a Google Cloud
    service account that has access to your apps in Play Console:
    1. Google Cloud Console → (any project, e.g. the Firebase one) → **IAM & Admin → Service
@@ -36,15 +37,25 @@ All under **Codemagic → Team settings**:
       (release to testing tracks / production). Do not make it an admin.
    4. Paste the JSON as the variable value.
 
-If you prefer per-app secrets, define the same groups under the app's **Environment
-variables** instead.
+Where to define groups 2 and 3:
+
+- **Personal account:** the app's **Environment variables** tab (global variables are a
+  team-only feature), so repeat them for each app. In the *Group* field type the new group
+  name and pick *Create*; "No groups found" just means it does not exist yet.
+- **Team:** **Team settings → Global variables and secrets**, shared by every app.
+
+Never leave a `vars:` entry empty in `codemagic.yaml` — Codemagic rejects empty strings
+("ensure this value has at least 1 characters"); comment the line out instead.
 
 ## Per-app setup
 
 1. **Add the app**: Codemagic → *Add application* → connect GitHub/GitLab/Bitbucket → pick the
-   repo → project type *Flutter App (via codemagic.yaml)*.
-2. **Android keystore**: run `scripts/create_upload_keystore.sh`, then **Team settings →
-   codemagic.yaml settings → Code signing identities → Android keystores**: upload the
+   repo → project type *Flutter App (via codemagic.yaml)*. If the app page shows the
+   **Workflow Editor** (builds named "Default Workflow"), click **Switch to YAML
+   configuration** — otherwise `codemagic.yaml` is ignored and tags trigger nothing.
+   Variables entered in the Workflow Editor are not visible to YAML builds.
+2. **Android keystore**: run `scripts/create_upload_keystore.sh`, then **Settings** (personal) /
+   **Team settings** (team) **→ codemagic.yaml settings → Code signing identities → Android keystores**: upload the
    `.jks`, enter its password, alias `upload` and key password, reference name
    **`upload_keystore`**. Codemagic cannot export it back — keep your own backup. Inside the
    build the keystore is exposed as `CM_KEYSTORE_PATH`, `CM_KEYSTORE_PASSWORD`,

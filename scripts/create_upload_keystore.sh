@@ -127,7 +127,7 @@ cat <<EOF
 
 Next steps:
   1. Back up $keystore and its password (losing it means an upload-key reset with Google).
-  2. Codemagic > Team settings > codemagic.yaml settings > Code signing identities >
+  2. Codemagic > Settings (personal) / Team settings (team) > codemagic.yaml settings > Code signing identities >
      Android keystores: upload the .jks with
        reference name: upload_keystore   key alias: $alias_name   (passwords as above)
   3. Add the SHA-1/SHA-256 above to Firebase (or re-run scripts/configure_firebase.sh <project-id>,
