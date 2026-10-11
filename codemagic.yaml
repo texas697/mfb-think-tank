@@ -303,7 +303,7 @@ workflows:
       app_store_connect: codemagic_asc_key
     environment:
       flutter: stable
-      xcode: "27.1" # pinned: "latest" pool was overloaded (Codemagic support, 2026-10-11); bump when needed
+      xcode: "26.6" # pinned: 27.x pools were overloaded (2026-10-11, builds queued 20-40 min); App Store accepts iOS 26 SDK
       # No CocoaPods: the project uses Swift Package Manager (Flutter default),
       # and every plugin in pubspec.yaml supports it. If you later add a
       # CocoaPods-only plugin, Flutter generates ios/Podfile and runs
@@ -339,7 +339,7 @@ workflows:
       app_store_connect: codemagic_asc_key
     environment:
       flutter: stable
-      xcode: "27.1" # pinned: "latest" pool was overloaded (Codemagic support, 2026-10-11); bump when needed
+      xcode: "26.6" # pinned: 27.x pools were overloaded (2026-10-11, builds queued 20-40 min); App Store accepts iOS 26 SDK
       android_signing:
         - upload_keystore
       groups:
