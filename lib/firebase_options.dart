@@ -56,13 +56,14 @@ class DefaultFirebaseOptions {
     projectId: 'mfb-think-tank',
     storageBucket: 'mfb-think-tank.firebasestorage.app',
   );
-
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyCzVdOueevfH0Ot07JeiyRN-AEAifkqXew',
     appId: '1:332944087519:ios:010fd9a44b281589890c6a',
     messagingSenderId: '332944087519',
     projectId: 'mfb-think-tank',
     storageBucket: 'mfb-think-tank.firebasestorage.app',
+    androidClientId: '332944087519-elkq96ca250eeggngbve1q98u90lo0qe.apps.googleusercontent.com',
+    iosClientId: '332944087519-f63tk86jgu5bn1sraj18djtkp6khevcq.apps.googleusercontent.com',
     iosBundleId: 'com.mfbservicesinc.mfbThinkTank',
   );
 }

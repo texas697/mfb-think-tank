@@ -12,7 +12,20 @@
           "package_name": "com.mfbservicesinc.mfb_think_tank"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "332944087519-elkq96ca250eeggngbve1q98u90lo0qe.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mfbservicesinc.mfb_think_tank",
+            "certificate_hash": "0d628d1bd093c2450549cb8ed2b1a88d13a71d0f"
+          }
+        },
+        {
+          "client_id": "332944087519-59q1ppe30pj2u7nflf43gklprpgj4711.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyC-bxV1nZS9woDvpzLIDJN66IK-dFghrCI"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "332944087519-59q1ppe30pj2u7nflf43gklprpgj4711.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "332944087519-f63tk86jgu5bn1sraj18djtkp6khevcq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.mfbservicesinc.mfbThinkTank"
+              }
+            }
+          ]
         }
       }
     }

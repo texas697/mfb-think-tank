@@ -33,14 +33,14 @@
 			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>REVERSED_CLIENT_ID_PLACEHOLDER</string>
+				<string>com.googleusercontent.apps.332944087519-f63tk86jgu5bn1sraj18djtkp6khevcq</string>
 			</array>
 		</dict>
 	</array>
 	<!-- Google Sign-In: CLIENT_ID from GoogleService-Info.plist.
 	     scripts/configure_firebase.sh replaces the placeholder. -->
 	<key>GIDClientID</key>
-	<string>GOOGLE_IOS_CLIENT_ID_PLACEHOLDER</string>
+	<string>332944087519-f63tk86jgu5bn1sraj18djtkp6khevcq.apps.googleusercontent.com</string>
 	<!-- The app only uses exempt encryption (HTTPS/TLS); skips the export
 	     compliance question for every TestFlight build. -->
 	<key>ITSAppUsesNonExemptEncryption</key>
