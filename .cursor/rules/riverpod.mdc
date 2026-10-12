@@ -1,0 +1,35 @@
+---
+description: Riverpod, repositories, and navigation
+globs: lib/**/*.dart
+alwaysApply: false
+---
+
+# Riverpod
+
+- Providers live in `features/<feature>/application/`. Name them
+  `<thing>Provider`. Depend on other providers with `ref.watch`.
+- Inject SDKs and config through providers (`firebaseAuthProvider`,
+  `appConfigProvider`, `targetPlatformProvider`) so tests can override them.
+  Do not call `FirebaseAuth.instance` from widgets.
+- Widgets: `ConsumerWidget` or `ConsumerStatefulWidget`. `ref.watch` for
+  state that rebuilds the UI; `ref.read` inside callbacks and `runAuthAction`.
+- Repository methods throw only the feature's failure type (`AuthFailure`),
+  never raw SDK exceptions. Map those in `data`.
+- Auth UI runs async work through `AuthActionMixin.runAuthAction`. It
+  ignores repeat taps, shows `AuthFailure.message`, and stays silent on
+  cancellation.
+- Routing: keep redirect decisions in the pure `authRedirect` function.
+  `routerProvider` only bridges `authStateChangesProvider` into GoRouter.
+  Use `authStateChangesProvider` for routing and `currentUserProvider` for
+  display.
+
+```dart
+// BAD: widget reaches into Firebase
+await FirebaseAuth.instance.signInWithEmailAndPassword(...);
+
+// GOOD: widget calls the repository provider
+await ref.read(authRepositoryProvider).signInWithEmail(
+  email: email,
+  password: password,
+);
+```

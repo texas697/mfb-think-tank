@@ -1,0 +1,31 @@
+---
+description: Unit and widget test conventions
+globs: test/**/*.dart
+alwaysApply: false
+---
+
+# Tests
+
+- Put tests in `test/` mirroring `lib/`. Shared mocks go in
+  `test/helpers/mocks.dart` (mocktail). Prefer `firebase_auth_mocks` for
+  auth flows; use mocktail when it cannot cover the case.
+- Test pure logic directly (`authRedirect`, validators, `AuthFailure`).
+  Do not stand up widgets to test a function.
+- Widget tests override providers, they do not touch Firebase:
+
+```dart
+await tester.pumpWidget(
+  ProviderScope(
+    overrides: [
+      authRepositoryProvider.overrideWithValue(repository),
+    ],
+    child: MaterialApp.router(routerConfig: router),
+  ),
+);
+```
+
+- Find form controls by `Key` (`sign-in-email`, `sign-in-submit`). Add a
+  `Key` on a new interactive control that a test will tap or fill.
+- Reset `tester.view` and dispose `GoRouter` with `addTearDown`.
+- Run `flutter test --dart-define-from-file=config/app_config.json`.
+  A plain `flutter test` misses `AppConfig` values.

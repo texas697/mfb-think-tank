@@ -1,0 +1,41 @@
+---
+description: Flutter widget structure - keep build methods shallow by extracting widgets
+globs: lib/**/*.dart
+alwaysApply: false
+---
+
+# Flutter Widget Structure
+
+Formatting and lints cannot flatten widget trees; structure must do it.
+
+- Keep each `build` method shallow: about 6 levels of widget nesting at most.
+  When deeper, extract a widget.
+- Extract widget classes, not `Widget _buildX()` helper methods.
+- Split screens into roles:
+  - App shell (`MaterialApp`, theme, routing) only.
+  - Screen: page content as a flat `children` list.
+  - Layout wrapper: `Scaffold`, `SafeArea`, `Center`, scroll, width constraint.
+  - Small leaf widgets for styled pieces (boxes, cards, rows).
+- Never use `Builder` just to get a context below `MaterialApp`/`Scaffold`;
+  extract a widget so its own `build` context is in the right place.
+- Make extracted widgets private (`_Name`) unless another file needs them.
+  Reuse shared layouts (e.g. `AuthScaffold`) before writing a new one.
+- Read `Theme.of(context)` inside the widget that uses it, not by passing
+  `ThemeData` down.
+- Keep extracted widgets `const`-constructible where possible.
+
+```dart
+// BAD: content buried under shell and layout
+home: Builder(builder: (context) => Scaffold(body: SafeArea(child: Center(
+  child: SingleChildScrollView(child: ConstrainedBox(child: Column(...)))))))
+
+// GOOD: each layer is its own widget
+home: _SetupScreen(details: details),
+
+class _SetupScreen extends StatelessWidget {
+  Widget build(BuildContext context) =>
+      _CenteredScrollLayout(children: [/* flat content */]);
+}
+```
+
+After edits, run `dart format` and `flutter analyze` on changed files.
