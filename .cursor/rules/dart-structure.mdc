@@ -1,0 +1,48 @@
+---
+description: Dart file size, decomposition, naming, and comments
+globs: "**/*.dart"
+alwaysApply: false
+---
+
+# Dart structure
+
+Production files (`lib/`, not tests or generated code):
+
+- Target **120** lines. Split past **160**. At **220**, split before adding more.
+- A file already past 220 may shrink; a change must not grow it.
+- Exempt: `test/`, `*.g.dart`, `*.freezed.dart`, `lib/firebase_options.dart`.
+
+One primary type per file. Cases of that type may share it (`AuthFailure`).
+Helpers stay library-private (`_name`) until another file needs them.
+
+No dumping-ground modules (`utils.dart`, `helpers.dart`, `misc.dart`) and no
+barrel `index.dart`. A pure function gets its own `snake_case.dart` beside the
+feature. Keep a type next to the behavior it describes. Shared constants are
+`static const` on the owning type.
+
+Screens orchestrate. Providers and repositories own behavior, one job each.
+A `build` method that branches on many modes becomes widget classes.
+
+## Names
+
+- Booleans: `isX`, `hasX`, `canX`.
+- Callbacks: `onX` (`onPressed`, `onSubmit`).
+- Methods name the action (`signIn`, `sendPasswordReset`).
+- Files and directories: `snake_case`. Providers: `<thing>Provider`.
+
+The widget class name is how you find it in DevTools. Add a `Key` only for
+widget identity or a test (`sign-in-email`).
+
+## Comments
+
+- `///` on the public API.
+- A `//` comment only when the constraint is invisible from the name.
+- If a name needs explaining, rename it. If a block needs explaining, extract it.
+
+## When to split
+
+1. Pure functions → own file.
+2. Constants → `static const`, or a small file when several files share them.
+3. Types → with the owning type.
+4. Behavior → provider, notifier, or repository.
+5. Render branches → widget classes.

@@ -35,6 +35,17 @@ test/helpers/                         shared mocks
 - Do not edit `lib/firebase_options.dart`. Never commit
   `android/key.properties` or `*.jks`.
 
+## Structure
+
+- Production files target 120 lines, split past 160, and must not grow once
+  they pass 220. Tests and generated files are exempt.
+- One primary type per file. Keep helpers private until another file needs
+  them. No `utils.dart`, `helpers.dart`, or barrel `index.dart`.
+- Booleans are `isX` / `hasX` / `canX`. Callbacks are `onX`. Methods name the
+  action (`signIn`). Colocate a type with the behavior it describes.
+- `///` documents the public API. A `//` comment only records a constraint
+  the name cannot show.
+
 ## Widgets
 
 - Keep each `build` method to about 6 levels of nesting. Extract a widget
