@@ -13,12 +13,24 @@ flutter test --dart-define-from-file=config/app_config.json
 
 Run the app with `scripts/run.sh` (it passes `config/app_config.json`).
 
+## Workflow
+
+- Do all work in a git worktree on a feature branch, never in the main
+  checkout: `git worktree add ../<repo>-<topic> -b <type>/<topic> main`.
+  Remove it after the PR merges.
+- Land changes through a pull request. Do not push to `main`.
+- Do not push `v*` tags or deploy unless asked. Codemagic bills per build:
+  `ci` runs on pushes to and PRs targeting `main`, and a `v*` tag starts the
+  Android and iOS release builds. Batch changes into one PR.
+- Changes that only touch `*.md` or `docs/` skip `ci`.
+
 ## Layout
 
 ```
 lib/main.dart                         Firebase init, then ProviderScope + App
 lib/app/                              MaterialApp, go_router, theme
 lib/core/config/                      AppConfig from config/app_config.json
+lib/core/network/                     Authenticated Crucix HTTP client, ID token seam
 lib/features/<name>/{data,application,presentation}
 test/                                 mirrors lib/
 test/helpers/                         shared mocks
