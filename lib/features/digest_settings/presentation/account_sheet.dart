@@ -1,0 +1,82 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:mfb_think_tank/app/router.dart';
+import 'package:mfb_think_tank/features/auth/application/auth_providers.dart';
+import 'package:mfb_think_tank/features/digest_settings/application/me_profile_provider.dart';
+import 'package:mfb_think_tank/features/digest_settings/presentation/ai_settings_form.dart';
+import 'package:mfb_think_tank/features/readers_digest/presentation/digest_colors.dart';
+
+/// Opens the account and AI key sheet.
+Future<void> showAccountSheet(BuildContext context) =>
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (_) => const AccountSheet(),
+    );
+
+/// Who is signed in, plus the AI provider/key form.
+class AccountSheet extends ConsumerWidget {
+  const AccountSheet({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final user = ref.watch(currentUserProvider).value;
+    final profile = ref.watch(meProfileProvider);
+    final providers = user?.providerData.map((p) => p.providerId).join(', ');
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        16,
+        16,
+        16,
+        16 + MediaQuery.viewInsetsOf(context).bottom,
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Account', style: theme.textTheme.titleLarge),
+            const SizedBox(height: 4),
+            Text(user?.email ?? user?.displayName ?? ''),
+            if (providers != null && providers.isNotEmpty)
+              Text(
+                'Signed in with $providers',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: DigestColors.of(context).muted,
+                ),
+              ),
+            const SizedBox(height: 16),
+            Text('AI write-ups', style: theme.textTheme.titleMedium),
+            const SizedBox(height: 8),
+            if (profile.value case final value?)
+              AiSettingsForm(profile: value)
+            else if (profile.hasError)
+              OutlinedButton(
+                key: const Key('account-retry'),
+                onPressed: () => ref.invalidate(meProfileProvider),
+                child: const Text('Could not load settings. Retry'),
+              )
+            else
+              const Center(child: CircularProgressIndicator()),
+            const SizedBox(height: 16),
+            OutlinedButton(
+              key: const Key('account-profile'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                context.go(AppRoutes.profile);
+              },
+              child: const Text('Profile and sign out'),
+            ),
+            TextButton(
+              key: const Key('account-done'),
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Done'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

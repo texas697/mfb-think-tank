@@ -7,7 +7,9 @@ import 'package:material_ui/material_ui.dart';
 import 'package:mfb_think_tank/app/app.dart';
 import 'package:mfb_think_tank/app/router.dart';
 import 'package:mfb_think_tank/features/auth/application/auth_providers.dart';
+import 'package:mfb_think_tank/features/readers_digest/application/digest_api_providers.dart';
 
+import '../helpers/fake_digest_repository.dart';
 import '../helpers/mocks.dart';
 
 void main() {
@@ -135,6 +137,7 @@ void main() {
             appleSignInGatewayProvider.overrideWithValue(
               MockAppleSignInGateway(),
             ),
+            digestRepositoryProvider.overrideWithValue(FakeDigestRepository()),
           ],
           child: const App(),
         ),
@@ -172,7 +175,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(location(container), AppRoutes.home);
-      expect(find.text('You are signed in. Build your app here.'), findsOne);
+      expect(find.text('Reader’s Digest'), findsOneWidget);
     });
 
     testWidgets('signing out from profile returns to sign-in', (tester) async {

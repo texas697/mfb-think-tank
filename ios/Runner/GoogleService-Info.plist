@@ -3,23 +3,21 @@
 <plist version="1.0">
 <dict>
 	<key>CLIENT_ID</key>
-	<string>332944087519-f63tk86jgu5bn1sraj18djtkp6khevcq.apps.googleusercontent.com</string>
+	<string>640576902539-i4e6trdgt49k6kvdlj94rn9re4mo2229.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.332944087519-f63tk86jgu5bn1sraj18djtkp6khevcq</string>
-	<key>ANDROID_CLIENT_ID</key>
-	<string>332944087519-b1rl0v45oonf27f31d886ecrcmdkrr77.apps.googleusercontent.com</string>
+	<string>com.googleusercontent.apps.640576902539-i4e6trdgt49k6kvdlj94rn9re4mo2229</string>
 	<key>API_KEY</key>
-	<string>AIzaSyCzVdOueevfH0Ot07JeiyRN-AEAifkqXew</string>
+	<string>AIzaSyA5Syp3a4QqsC9FucowQUWKRzuB_MF0Gas</string>
 	<key>GCM_SENDER_ID</key>
-	<string>332944087519</string>
+	<string>640576902539</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
 	<string>com.mfbservicesinc.mfbThinkTank</string>
 	<key>PROJECT_ID</key>
-	<string>mfb-think-tank</string>
+	<string>crucix-intel-41718</string>
 	<key>STORAGE_BUCKET</key>
-	<string>mfb-think-tank.firebasestorage.app</string>
+	<string>crucix-intel-41718.firebasestorage.app</string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -31,6 +29,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:332944087519:ios:010fd9a44b281589890c6a</string>
+	<string>1:640576902539:ios:126300e5c20adbb7948b8e</string>
 </dict>
 </plist>

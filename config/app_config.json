@@ -1,4 +1,5 @@
 {
-  "GOOGLE_SERVER_CLIENT_ID": "332944087519-59q1ppe30pj2u7nflf43gklprpgj4711.apps.googleusercontent.com",
-  "GOOGLE_IOS_CLIENT_ID": "332944087519-f63tk86jgu5bn1sraj18djtkp6khevcq.apps.googleusercontent.com"
+  "GOOGLE_SERVER_CLIENT_ID": "640576902539-p5d0v10gsjmi2bc1e38nhdqcaflki8b8.apps.googleusercontent.com",
+  "GOOGLE_IOS_CLIENT_ID": "640576902539-i4e6trdgt49k6kvdlj94rn9re4mo2229.apps.googleusercontent.com",
+  "CRUCIX_API_BASE_URL": "https://crucix-qa65slel7a-uc.a.run.app"
 }

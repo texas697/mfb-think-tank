@@ -10,6 +10,7 @@ class AppConfig {
   const AppConfig({
     this.googleServerClientId = '',
     this.googleIosClientId = '',
+    this.crucixApiBaseUrl = '',
   });
 
   /// Reads the values compiled in via `--dart-define(-from-file)`.
@@ -17,7 +18,8 @@ class AppConfig {
     : googleServerClientId = const String.fromEnvironment(
         'GOOGLE_SERVER_CLIENT_ID',
       ),
-      googleIosClientId = const String.fromEnvironment('GOOGLE_IOS_CLIENT_ID');
+      googleIosClientId = const String.fromEnvironment('GOOGLE_IOS_CLIENT_ID'),
+      crucixApiBaseUrl = const String.fromEnvironment('CRUCIX_API_BASE_URL');
 
   /// The Firebase project's "Web client" OAuth client id.
   ///
@@ -28,6 +30,9 @@ class AppConfig {
   /// `CLIENT_ID` from `ios/Runner/GoogleService-Info.plist`.
   final String googleIosClientId;
 
+  /// HTTPS origin of the Crucix API (e.g. `https://crucix-....a.run.app`).
+  final String crucixApiBaseUrl;
+
   /// Whether the ids Google Sign-In needs on [platform] are present.
   bool isGoogleSignInConfiguredFor(TargetPlatform platform) =>
       switch (platform) {
@@ -35,6 +40,9 @@ class AppConfig {
         TargetPlatform.iOS => googleIosClientId.isNotEmpty,
         _ => false,
       };
+
+  /// Whether a Crucix API base URL is configured.
+  bool get hasCrucixApiBaseUrl => crucixApiBaseUrl.isNotEmpty;
 }
 
 /// The app's [AppConfig]. Override in tests.

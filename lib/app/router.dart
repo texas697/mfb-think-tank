@@ -7,8 +7,10 @@ import 'package:mfb_think_tank/features/auth/presentation/forgot_password_screen
 import 'package:mfb_think_tank/features/auth/presentation/sign_in_screen.dart';
 import 'package:mfb_think_tank/features/auth/presentation/sign_up_screen.dart';
 import 'package:mfb_think_tank/features/auth/presentation/splash_screen.dart';
-import 'package:mfb_think_tank/features/home/presentation/home_screen.dart';
 import 'package:mfb_think_tank/features/profile/presentation/profile_screen.dart';
+import 'package:mfb_think_tank/features/readers_digest/data/digest_query.dart';
+import 'package:mfb_think_tank/features/readers_digest/presentation/article_screen.dart';
+import 'package:mfb_think_tank/features/readers_digest/presentation/digest_screen.dart';
 
 /// Route paths. Use these instead of string literals.
 abstract final class AppRoutes {
@@ -18,6 +20,11 @@ abstract final class AppRoutes {
   static const forgotPassword = '/forgot-password';
   static const home = '/';
   static const profile = '/profile';
+  static const article = '/article/:id';
+
+  /// Location of the reader for article [id].
+  static String articleLocation(String id) =>
+      '/article/${Uri.encodeComponent(id)}';
 
   /// Routes reachable only while signed out.
   static const signedOutOnly = {signIn, signUp, forgotPassword};
@@ -123,8 +130,19 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: AppRoutes.home,
-        builder: (context, state) => const HomeScreen(),
+        builder: (context, state) => DigestScreen(
+          query: DigestQuery.sanitized(
+            filter: state.uri.queryParameters['filter'] ?? '',
+            topic: state.uri.queryParameters['topic'] ?? '',
+            q: state.uri.queryParameters['q'] ?? '',
+          ),
+        ),
         routes: [
+          GoRoute(
+            path: AppRoutes.article.substring(1),
+            builder: (context, state) =>
+                ArticleScreen(id: state.pathParameters['id'] ?? ''),
+          ),
           GoRoute(
             path: AppRoutes.profile.substring(1),
             builder: (context, state) => const ProfileScreen(),

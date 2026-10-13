@@ -50,20 +50,20 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyC-bxV1nZS9woDvpzLIDJN66IK-dFghrCI',
-    appId: '1:332944087519:android:1a0e4bb7e142ed87890c6a',
-    messagingSenderId: '332944087519',
-    projectId: 'mfb-think-tank',
-    storageBucket: 'mfb-think-tank.firebasestorage.app',
+    apiKey: 'AIzaSyB-Rf8LfOhb7G_u0XKCzrEHlMFABpOrRM8',
+    appId: '1:640576902539:android:c989fe06c4a4e6d9948b8e',
+    messagingSenderId: '640576902539',
+    projectId: 'crucix-intel-41718',
+    storageBucket: 'crucix-intel-41718.firebasestorage.app',
   );
+
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyCzVdOueevfH0Ot07JeiyRN-AEAifkqXew',
-    appId: '1:332944087519:ios:010fd9a44b281589890c6a',
-    messagingSenderId: '332944087519',
-    projectId: 'mfb-think-tank',
-    storageBucket: 'mfb-think-tank.firebasestorage.app',
-    androidClientId: '332944087519-b1rl0v45oonf27f31d886ecrcmdkrr77.apps.googleusercontent.com',
-    iosClientId: '332944087519-f63tk86jgu5bn1sraj18djtkp6khevcq.apps.googleusercontent.com',
+    apiKey: 'AIzaSyA5Syp3a4QqsC9FucowQUWKRzuB_MF0Gas',
+    appId: '1:640576902539:ios:126300e5c20adbb7948b8e',
+    messagingSenderId: '640576902539',
+    projectId: 'crucix-intel-41718',
+    storageBucket: 'crucix-intel-41718.firebasestorage.app',
+    iosClientId: '640576902539-i4e6trdgt49k6kvdlj94rn9re4mo2229.apps.googleusercontent.com',
     iosBundleId: 'com.mfbservicesinc.mfbThinkTank',
   );
 }
