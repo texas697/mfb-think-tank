@@ -33,14 +33,14 @@
 			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.googleusercontent.apps.332944087519-f63tk86jgu5bn1sraj18djtkp6khevcq</string>
+				<string>com.googleusercontent.apps.640576902539-i4e6trdgt49k6kvdlj94rn9re4mo2229</string>
 			</array>
 		</dict>
 	</array>
 	<!-- Google Sign-In: CLIENT_ID from GoogleService-Info.plist.
 	     scripts/configure_firebase.sh replaces the placeholder. -->
 	<key>GIDClientID</key>
-	<string>332944087519-f63tk86jgu5bn1sraj18djtkp6khevcq.apps.googleusercontent.com</string>
+	<string>640576902539-i4e6trdgt49k6kvdlj94rn9re4mo2229.apps.googleusercontent.com</string>
 	<!-- The app only uses exempt encryption (HTTPS/TLS); skips the export
 	     compliance question for every TestFlight build. -->
 	<key>ITSAppUsesNonExemptEncryption</key>
