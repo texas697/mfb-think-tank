@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mfb_think_tank/app/app.dart';
 import 'package:mfb_think_tank/app/firebase_setup_app.dart';
+import 'package:mfb_think_tank/app/global_error_handler.dart';
 import 'package:mfb_think_tank/firebase_options.dart';
 
 Future<void> main() async {
@@ -19,5 +20,9 @@ Future<void> main() async {
     return;
   }
 
-  runApp(const ProviderScope(child: App()));
+  // One container for the whole app so the error handler shares providers
+  // (API client, router) with the widget tree.
+  final container = ProviderContainer();
+  installGlobalErrorHandler(container);
+  runApp(UncontrolledProviderScope(container: container, child: const App()));
 }
