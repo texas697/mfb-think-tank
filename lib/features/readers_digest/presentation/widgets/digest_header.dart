@@ -32,7 +32,7 @@ class DigestHeader extends ConsumerWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'MFB INTELLIGENCE',
+                  'MFB SERVICES',
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.labelMedium?.copyWith(
                     color: colors.muted,
@@ -54,7 +54,7 @@ class DigestHeader extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Reader’s Digest',
+            'Think Tank',
             style: theme.textTheme.headlineMedium?.copyWith(
               fontWeight: FontWeight.w700,
             ),

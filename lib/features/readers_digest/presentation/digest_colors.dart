@@ -1,6 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
-/// Named color tokens for the Reader's Digest feature.
+/// Named color tokens for the digest feature.
 @immutable
 class DigestColors extends ThemeExtension<DigestColors> {
   const DigestColors();

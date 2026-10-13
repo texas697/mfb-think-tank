@@ -12,7 +12,7 @@ import 'package:mfb_think_tank/features/readers_digest/presentation/widgets/dige
 import 'package:mfb_think_tank/features/readers_digest/presentation/widgets/digest_feed_body.dart';
 import 'package:mfb_think_tank/features/readers_digest/presentation/widgets/digest_header.dart';
 
-/// Signed-in landing screen: the Reader's Digest library for [query], which
+/// Signed-in landing screen: the MFB Think Tank library for [query], which
 /// comes from the route's `filter`, `topic` and `q` parameters.
 class DigestScreen extends ConsumerStatefulWidget {
   const DigestScreen({required this.query, super.key});
@@ -55,8 +55,10 @@ class _DigestScreenState extends ConsumerState<DigestScreen> {
     super.dispose();
   }
 
-  // Providers cannot be modified while the widget tree builds.
-  void _sync() => Future(() {
+  // Providers cannot be modified while the widget tree builds. A post-frame
+  // callback (not a zero-delay Future) keeps the sync inside the frame
+  // pipeline, so the resulting rebuild is scheduled deterministically.
+  void _sync() => WidgetsBinding.instance.addPostFrameCallback((_) {
     if (!mounted) return;
     ref.read(digestQueryProvider.notifier).sync(widget.query);
   });
