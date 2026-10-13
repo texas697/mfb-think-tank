@@ -10,7 +10,7 @@ class MeProfile {
     required this.email,
     this.llm,
     this.providers = const [],
-    this.byokEnabled = false,
+    this.isByokEnabled = false,
   });
 
   factory MeProfile.fromJson(Map<String, dynamic> json) => MeProfile(
@@ -25,16 +25,19 @@ class MeProfile {
               .map(AiProviderMeta.fromJson)
               .toList()
         : const [],
-    byokEnabled: json['byokEnabled'] as bool? ?? false,
+    isByokEnabled: json['byokEnabled'] as bool? ?? false,
   );
 
   final String uid;
   final String email;
   final AiSettings? llm;
   final List<AiProviderMeta> providers;
-  final bool byokEnabled;
+  final bool isByokEnabled;
 
-  bool get hasLlm => llm?.hasKey ?? false;
+  /// True when the server holds a configuration. A provider that needs no
+  /// key (`openai-compatible`) is saved with `hasKey == false`, so this does
+  /// not depend on [AiSettings.hasKey].
+  bool get hasLlm => llm != null;
 
   /// Copy with a replaced or removed AI configuration.
   MeProfile withLlm(AiSettings? value) => MeProfile(
@@ -42,6 +45,6 @@ class MeProfile {
     email: email,
     llm: value,
     providers: providers,
-    byokEnabled: byokEnabled,
+    isByokEnabled: isByokEnabled,
   );
 }

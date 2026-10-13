@@ -24,6 +24,9 @@ class DigestMarkdown extends ConsumerWidget {
       data: data,
       selectable: true,
       onTapLink: (text, href, title) => openExternalLink(context, ref, href),
+      // The Markdown comes from the server and an LLM. Never fetch an image
+      // URI it names; show the alt text in its place.
+      imageBuilder: (uri, title, alt) => _ImagePlaceholder(alt: alt),
       styleSheet: MarkdownStyleSheet(
         p: body,
         h1: theme.textTheme.titleLarge?.copyWith(color: colors.text),
@@ -39,6 +42,25 @@ class DigestMarkdown extends ConsumerWidget {
           border: Border(left: BorderSide(color: colors.border, width: 3)),
         ),
       ),
+    );
+  }
+}
+
+/// Stands in for a Markdown image without loading its URI.
+class _ImagePlaceholder extends StatelessWidget {
+  const _ImagePlaceholder({this.alt});
+
+  final String? alt;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = alt?.trim() ?? '';
+    if (text.isEmpty) return const SizedBox.shrink();
+    return Text(
+      '[$text]',
+      key: const Key('digest-markdown-image'),
+      style: Theme.of(context).textTheme.bodyMedium
+          ?.copyWith(color: DigestColors.of(context).muted),
     );
   }
 }

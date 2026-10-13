@@ -11,7 +11,7 @@ class ArticleDetail {
     this.summarizedBy,
     this.summaryModel,
     this.author,
-    this.extracted = false,
+    this.isExtracted = false,
     this.textPreview = '',
     this.research = const ResearchResult(),
   });
@@ -22,7 +22,7 @@ class ArticleDetail {
     summarizedBy: json['summarizedBy'] as String?,
     summaryModel: json['summaryModel'] as String?,
     author: json['author'] as String?,
-    extracted: json['extracted'] as bool? ?? false,
+    isExtracted: json['extracted'] as bool? ?? false,
     textPreview: json['textPreview'] as String? ?? '',
     research: json['research'] is Map<String, dynamic>
         ? ResearchResult.fromJson(json['research'] as Map<String, dynamic>)
@@ -38,7 +38,7 @@ class ArticleDetail {
   /// `provider/model` attribution string from the server.
   final String? summaryModel;
   final String? author;
-  final bool extracted;
+  final bool isExtracted;
   final String textPreview;
   final ResearchResult research;
 
@@ -60,7 +60,7 @@ class ArticleDetail {
     summarizedBy: other.summarizedBy,
     summaryModel: other.summaryModel,
     author: other.author,
-    extracted: other.extracted,
+    isExtracted: other.isExtracted,
     textPreview: other.textPreview,
   );
 
@@ -73,7 +73,7 @@ class ArticleDetail {
     String? summarizedBy,
     String? summaryModel,
     String? author,
-    bool? extracted,
+    bool? isExtracted,
     String? textPreview,
     ResearchResult? research,
   }) => ArticleDetail(
@@ -82,7 +82,7 @@ class ArticleDetail {
     summarizedBy: summarizedBy ?? this.summarizedBy,
     summaryModel: summaryModel ?? this.summaryModel,
     author: author ?? this.author,
-    extracted: extracted ?? this.extracted,
+    isExtracted: isExtracted ?? this.isExtracted,
     textPreview: textPreview ?? this.textPreview,
     research: research ?? this.research,
   );

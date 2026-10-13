@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:mfb_think_tank/features/auth/application/auth_providers.dart';
+import 'package:mfb_think_tank/features/digest_settings/application/digest_settings_providers.dart';
 import 'package:mfb_think_tank/features/readers_digest/application/digest_api_providers.dart';
 import 'package:mfb_think_tank/features/readers_digest/application/external_link_provider.dart';
 import 'package:mfb_think_tank/features/readers_digest/data/article_detail.dart';
@@ -20,7 +21,7 @@ void main() {
   ArticleDetail plain() => ArticleDetail(
     card: fakeCard('a'),
     textPreview: 'The real excerpt.',
-    extracted: true,
+    isExtracted: true,
   );
 
   Future<void> pump(WidgetTester tester) async {
@@ -63,7 +64,7 @@ void main() {
       card: fakeCard('a', hasWriteup: true),
       summaryMd: '## Key points\n\nA summary.',
       summaryModel: 'anthropic/claude',
-      extracted: true,
+      isExtracted: true,
     );
     await pump(tester);
     expect(find.text('The real excerpt.'), findsOneWidget);

@@ -50,6 +50,13 @@ class DigestFeedBody extends ConsumerWidget {
         !query.hasSearch && !query.hasTopic && data.items.isNotEmpty;
     return SliverMainAxisGroup(
       slivers: [
+        if (feed.isLoading)
+          const SliverToBoxAdapter(
+            child: LinearProgressIndicator(
+              key: Key('feed-reloading'),
+              minHeight: 2,
+            ),
+          ),
         if (feed.hasError)
           SliverToBoxAdapter(
             child: FeedMessage(

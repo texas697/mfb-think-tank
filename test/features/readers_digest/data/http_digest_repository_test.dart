@@ -1,10 +1,13 @@
+import 'dart:async';
 import 'dart:convert';
 
+import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:mfb_think_tank/core/network/api_client.dart';
 import 'package:mfb_think_tank/core/network/id_token_provider.dart';
+import 'package:mfb_think_tank/features/readers_digest/data/article_detail.dart';
 import 'package:mfb_think_tank/features/readers_digest/data/digest_failure.dart';
 import 'package:mfb_think_tank/features/readers_digest/data/digest_query.dart';
 import 'package:mfb_think_tank/features/readers_digest/data/http_digest_repository.dart';
@@ -89,6 +92,39 @@ void main() {
           .fetchFeed(const DigestQuery()),
       throwsA(isA<DigestNetwork>()),
     );
+  });
+
+  test('summarize waits long enough for a slow write-up', () {
+    fakeAsync((async) {
+      ArticleDetail? result;
+      Object? error;
+      final slow = repo(
+        (_) => Future.delayed(
+          const Duration(seconds: 40),
+          () => http.Response(
+            jsonEncode({'id': 'a', 'title': 'T', 'summaryMd': 'Done.'}),
+            200,
+          ),
+        ),
+      );
+      unawaited(
+        slow.summarize('a').then<void>((d) {
+          result = d;
+        }, onError: (Object e) => error = e),
+      );
+      async.elapse(const Duration(seconds: 40));
+      expect(error, isNull);
+      expect(result?.summaryMd, 'Done.');
+
+      Object? late;
+      unawaited(
+        repo((_) => Completer<http.Response>().future)
+            .summarize('a')
+            .then<void>((_) {}, onError: (Object e) => late = e),
+      );
+      async.elapse(const Duration(seconds: 75));
+      expect(late, isA<DigestTimeout>());
+    });
   });
 
   test('a rating returns the server value and is never retried', () async {

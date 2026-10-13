@@ -16,8 +16,44 @@ class _Tokens implements IdTokenProvider {
   }
 }
 
+class _ThrowingTokens implements IdTokenProvider {
+  _ThrowingTokens(this.error);
+
+  final Object error;
+
+  @override
+  Future<String> getIdToken({bool forceRefresh = false}) =>
+      Future<String>.error(error);
+}
+
 void main() {
   final base = Uri.parse('https://api.example.com');
+
+  Matcher throwsKind(ApiFailureKind kind) =>
+      throwsA(isA<ApiException>().having((e) => e.kind, 'kind', kind));
+
+  test('maps a token fetch failure to an ApiException', () async {
+    var calls = 0;
+    ApiClient client(Object error) => ApiClient(
+      http: MockClient((_) async {
+        calls++;
+        return http.Response('{}', 200);
+      }),
+      base: base,
+      tokens: _ThrowingTokens(error),
+    );
+    await expectLater(
+      client(StateError('No signed-in user')).get('api/me'),
+      throwsKind(ApiFailureKind.unauthorized),
+    );
+    // Any SDK exception (for example a Firebase network error) must not
+    // escape as its own type; repositories only know ApiException.
+    await expectLater(
+      client(Exception('firebase_auth/network-request-failed')).get('api/me'),
+      throwsKind(ApiFailureKind.network),
+    );
+    expect(calls, 0);
+  });
 
   test('sends the Bearer token and joins path and query', () async {
     late http.BaseRequest seen;

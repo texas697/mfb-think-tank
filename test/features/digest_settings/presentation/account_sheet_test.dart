@@ -1,11 +1,14 @@
+import 'dart:async';
+
 import 'package:firebase_auth_mocks/firebase_auth_mocks.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:mfb_think_tank/features/auth/application/auth_providers.dart';
+import 'package:mfb_think_tank/features/digest_settings/application/digest_settings_providers.dart';
 import 'package:mfb_think_tank/features/digest_settings/data/ai_settings.dart';
+import 'package:mfb_think_tank/features/digest_settings/data/digest_settings_failure.dart';
 import 'package:mfb_think_tank/features/digest_settings/presentation/account_sheet.dart';
-import 'package:mfb_think_tank/features/readers_digest/application/digest_api_providers.dart';
 
 import '../../../helpers/fake_settings_repository.dart';
 
@@ -32,6 +35,9 @@ void main() {
     );
     await tester.pumpAndSettle();
   }
+
+  bool isEnabled(WidgetTester tester, String key) =>
+      tester.widget<TextField>(find.byKey(Key(key))).enabled ?? true;
 
   testWidgets('shows the account and requires a key for the first save', (
     tester,
@@ -83,10 +89,17 @@ void main() {
       llm: const AiSettings(provider: 'openai', hasKey: true),
     );
     await pump(tester);
-    await tester.tap(find.byType(DropdownButtonFormField<String>));
+    await tester.tap(find.byKey(const Key('ai-provider')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Gemini').last);
+    // Tap the item's label: the item itself is a loose alignment box.
+    await tester.tap(
+      find.descendant(
+        of: find.byKey(const Key('ai-provider-gemini')),
+        matching: find.byType(Text),
+      ),
+    );
     await tester.pumpAndSettle();
+    expect(find.text('Gemini'), findsOneWidget);
     await tester.tap(find.byKey(const Key('ai-save')));
     await tester.pump();
     expect(find.text('Enter an API key.'), findsOneWidget);
@@ -108,10 +121,83 @@ void main() {
     expect(find.byKey(const Key('ai-remove')), findsNothing);
   });
 
+  testWidgets('a saved keyless provider still offers Test and Remove', (
+    tester,
+  ) async {
+    repo = FakeSettingsRepository(
+      llm: const AiSettings(
+        provider: 'openai-compatible',
+        baseUrl: 'http://llm.local/v1',
+      ),
+    );
+    await pump(tester);
+    expect(find.byKey(const Key('ai-test')), findsOneWidget);
+    expect(find.byKey(const Key('ai-remove')), findsOneWidget);
+    expect(find.byKey(const Key('ai-key')), findsNothing);
+    await tester.tap(find.byKey(const Key('ai-test')));
+    await tester.pumpAndSettle();
+    expect(repo.tests, 1);
+  });
+
+  testWidgets('shows progress on the active button and locks the fields', (
+    tester,
+  ) async {
+    repo = FakeSettingsRepository(
+      llm: const AiSettings(provider: 'anthropic', hasKey: true),
+    );
+    await pump(tester);
+    expect(find.text('Update'), findsOneWidget);
+    expect(isEnabled(tester, 'ai-model'), isTrue);
+
+    repo.gate = Completer<void>();
+    await tester.tap(find.byKey(const Key('ai-save')));
+    await tester.pump();
+    expect(find.text('Saving…'), findsOneWidget);
+    expect(find.text('Testing…'), findsNothing);
+    expect(isEnabled(tester, 'ai-model'), isFalse);
+    expect(isEnabled(tester, 'ai-key'), isFalse);
+    expect(
+      tester.widget<OutlinedButton>(find.byKey(const Key('ai-test'))).onPressed,
+      isNull,
+    );
+
+    repo.gate!.complete();
+    await tester.pumpAndSettle();
+    expect(find.text('Saving…'), findsNothing);
+    expect(find.text('Update'), findsOneWidget);
+    expect(isEnabled(tester, 'ai-model'), isTrue);
+
+    repo.gate = Completer<void>();
+    await tester.tap(find.byKey(const Key('ai-test')));
+    await tester.pump();
+    expect(find.text('Testing…'), findsOneWidget);
+    expect(find.text('Saving…'), findsNothing);
+    repo.gate!.complete();
+    await tester.pumpAndSettle();
+    expect(find.text('Key verified.'), findsOneWidget);
+  });
+
+  testWidgets('shows the failure message when settings cannot load', (
+    tester,
+  ) async {
+    repo = FakeSettingsRepository(fetchError: const SettingsUnavailable());
+    await pump(tester);
+    expect(find.byKey(const Key('account-error')), findsOneWidget);
+    expect(find.text('Could not load settings.'), findsOneWidget);
+    expect(find.text(const SettingsUnavailable().message), findsOneWidget);
+    expect(find.byKey(const Key('ai-save')), findsNothing);
+
+    repo.fetchError = null;
+    await tester.tap(find.byKey(const Key('feed-message-action')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('account-error')), findsNothing);
+    expect(find.byKey(const Key('ai-save')), findsOneWidget);
+  });
+
   testWidgets('disables the form when the server cannot store keys', (
     tester,
   ) async {
-    repo = FakeSettingsRepository(byokEnabled: false);
+    repo = FakeSettingsRepository(isByokEnabled: false);
     await pump(tester);
     expect(
       find.text('Key storage is not enabled on this server.'),

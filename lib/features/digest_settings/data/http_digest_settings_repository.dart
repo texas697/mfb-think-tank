@@ -34,10 +34,18 @@ class HttpDigestSettingsRepository implements DigestSettingsRepository {
     await _decode(await _call(() => _api.delete('api/me/llm')));
   }
 
+  // The server waits up to 20 s on the provider before answering 502 with a
+  // diagnostic; the client must outlast that so the message arrives.
+  static const _testLlmTimeout = Duration(seconds: 30);
+
   @override
   Future<void> testLlm() async {
     final response = await _call(
-      () => _api.post('api/me/llm/test', body: const {}),
+      () => _api.post(
+        'api/me/llm/test',
+        body: const {},
+        timeout: _testLlmTimeout,
+      ),
     );
     if (!response.isSuccess) throw _mapError(response);
   }
