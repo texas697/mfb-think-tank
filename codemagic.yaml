@@ -3,7 +3,8 @@
 # Docs: https://docs.codemagic.io/yaml-quick-start/building-a-flutter-app/
 #
 # Workflows
-#   ci               PRs into main and pushes to main: analyze + test (no signing)
+#   ci               PRs into main only: analyze + test (no signing). Merges to main
+#                    do not rebuild; the PR build already tested the same code.
 #   android-release  tag v*: signed AAB, uploaded to Google Play (internal track, draft)
 #   ios-release      tag v*: signed IPA, uploaded to TestFlight
 #   release-all      manual only: both stores from one macOS build
@@ -40,8 +41,9 @@
 #      config/app_config.json). Release builds refuse to run without it.
 #
 # Releasing: bump `version:` in pubspec.yaml (the build number part is ignored
-# on CI; it is derived from the stores), commit, then `git tag v1.2.3 && git
-# push --tags`.
+# on CI; it is derived from the stores) in a PR and merge it, then tag the
+# merge commit on main: `git tag v1.2.3 && git push origin v1.2.3`. The tag must
+# match the pubspec version or the build stops before doing any work.
 #
 # NOTE ON INSTANCES: linux_x2 needs billing enabled on your Codemagic team.
 # On the free plan only mac_mini_m2 is available: change `instance_type` of
@@ -92,11 +94,13 @@ definitions:
     - &check_version_tag
       name: Check tag matches pubspec version
       script: |
-        # Warns (does not fail) when the pushed tag does not match pubspec.yaml.
+        # Fails fast, before any paid build work, when the pushed tag does not
+        # match pubspec.yaml.
         if [ -n "${CM_TAG:-}" ]; then
           PUBSPEC_VERSION=$(sed -n 's/^version:[[:space:]]*\([^+[:space:]]*\).*/\1/p' pubspec.yaml)
           if [ "$CM_TAG" != "v$PUBSPEC_VERSION" ]; then
-            echo "WARNING: tag $CM_TAG does not match pubspec version $PUBSPEC_VERSION"
+            echo "ERROR: tag $CM_TAG does not match pubspec version $PUBSPEC_VERSION"
+            exit 1
           fi
         fi
 
@@ -239,15 +243,11 @@ workflows:
         - $FLUTTER_ROOT/.pub-cache
     triggering:
       events:
-        - push
         - pull_request
       branch_patterns:
         - pattern: main
           include: true
-          source: true # push: builds main
-        - pattern: main
-          include: true
-          source: false # pull_request: builds PRs targeting main
+          source: false # builds PRs targeting main
       cancel_previous_builds: true
     when:
       changeset:
