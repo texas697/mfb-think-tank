@@ -1,10 +1,14 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:mfb_think_tank/features/auth/data/account_deletion_gateway.dart';
 import 'package:mfb_think_tank/features/auth/data/apple_sign_in_gateway.dart';
 import 'package:mfb_think_tank/features/auth/data/auth_repository.dart';
 import 'package:mfb_think_tank/features/auth/data/google_sign_in_gateway.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
+
+class MockAccountDeletionGateway extends Mock
+    implements AccountDeletionGateway {}
 
 class MockGoogleSignInGateway extends Mock implements GoogleSignInGateway {}
 

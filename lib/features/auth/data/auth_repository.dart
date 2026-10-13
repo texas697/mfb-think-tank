@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'package:mfb_think_tank/features/auth/data/account_deletion_gateway.dart';
 import 'package:mfb_think_tank/features/auth/data/apple_sign_in_gateway.dart';
 import 'package:mfb_think_tank/features/auth/data/auth_failure.dart';
 import 'package:mfb_think_tank/features/auth/data/google_sign_in_gateway.dart';
@@ -51,11 +52,12 @@ abstract interface class AuthRepository {
 
   Future<void> signOut();
 
-  /// Permanently deletes the current user's account.
+  /// Permanently deletes the current user's account and server-side data.
   ///
-  /// Password users must pass their [password] to re-authenticate. Google and
-  /// Apple users are re-authenticated interactively when needed. Apple tokens
-  /// are revoked as required by App Store Review Guideline 5.1.1(v).
+  /// Password users pass their [password] to confirm their identity. Apple
+  /// users are re-authenticated so their tokens can be revoked, as required
+  /// by App Store Review Guideline 5.1.1(v). The server then deletes the
+  /// user's data and the Auth user; the local session is cleared afterwards.
   Future<void> deleteAccount({String? password});
 }
 
@@ -65,12 +67,14 @@ class FirebaseAuthRepository implements AuthRepository {
     required this._auth,
     required this._google,
     required this._apple,
+    required this._deletion,
     @visibleForTesting String Function()? nonceGenerator,
   }) : _generateNonce = nonceGenerator ?? generateNonce;
 
   final FirebaseAuth _auth;
   final GoogleSignInGateway _google;
   final AppleSignInGateway _apple;
+  final AccountDeletionGateway _deletion;
   final String Function() _generateNonce;
 
   @override
@@ -174,19 +178,12 @@ class FirebaseAuthRepository implements AuthRepository {
       );
     }
 
-    try {
-      await user.delete();
-    } on FirebaseAuthException catch (e) {
-      if (e.code != 'requires-recent-login' || !usedGoogle) rethrow;
-      final idToken = await _google.authenticate();
-      await user.reauthenticateWithCredential(
-        GoogleAuthProvider.credential(idToken: idToken),
-      );
-      await user.delete();
-    }
+    // The server wipes Firestore data and the Auth user together, so a
+    // local `user.delete()` is neither needed nor safe (it would strand data).
+    await _deletion.deleteAccount();
 
     if (usedGoogle) await _bestEffort(_google.disconnect);
-    // Clears any locally cached session; the account itself is already gone.
+    // Clears the locally cached session; the account itself is already gone.
     await _bestEffort(_auth.signOut);
   });
 

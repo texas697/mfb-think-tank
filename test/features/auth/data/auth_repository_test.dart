@@ -26,12 +26,15 @@ void main() {
 
   late MockGoogleSignInGateway google;
   late MockAppleSignInGateway apple;
+  late MockAccountDeletionGateway deletion;
 
   setUp(() {
     google = MockGoogleSignInGateway();
     apple = MockAppleSignInGateway();
+    deletion = MockAccountDeletionGateway();
     when(() => google.signOut()).thenAnswer((_) async {});
     when(() => google.disconnect()).thenAnswer((_) async {});
+    when(() => deletion.deleteAccount()).thenAnswer((_) async {});
   });
 
   FirebaseAuthRepository repositoryWith(FirebaseAuth auth) =>
@@ -39,6 +42,7 @@ void main() {
         auth: auth,
         google: google,
         apple: apple,
+        deletion: deletion,
         nonceGenerator: () => _rawNonce,
       );
 
@@ -250,43 +254,43 @@ void main() {
         (captured.single as AuthCredential).providerId,
         AuthProviderIds.password,
       );
-      verify(() => user.delete()).called(1);
+      verifyInOrder([() => deletion.deleteAccount(), () => auth.signOut()]);
+      verifyNever(() => user.delete());
     });
 
-    test('deleteAccount surfaces requires-recent-login', () async {
-      givenProviders([AuthProviderIds.password]);
-      when(() => user.delete())
-          .thenThrow(FirebaseAuthException(code: 'requires-recent-login'));
+    test(
+      'deleteAccount leaves the account intact when the server fails',
+      () async {
+        givenProviders([AuthProviderIds.password]);
+        when(
+          () => deletion.deleteAccount(),
+        ).thenThrow(const AuthFailure('account-deletion-failed', 'try again'));
 
-      await expectLater(
-        repository.deleteAccount(),
-        throwsA(
-          isA<AuthFailure>().having(
-            (f) => f.requiresRecentLogin,
-            'requiresRecentLogin',
-            isTrue,
-          ),
-        ),
-      );
-    });
+        await expectLater(
+          repository.deleteAccount(password: 'secret'),
+          throwsA(_failureWithCode('account-deletion-failed')),
+        );
+        verifyNever(() => auth.signOut());
+        verifyNever(() => user.delete());
+      },
+    );
 
-    test('deleteAccount re-authenticates Google users on demand', () async {
-      givenProviders([AuthProviderIds.google]);
-      var attempts = 0;
-      when(() => user.delete()).thenAnswer((_) async {
-        if (attempts++ == 0) {
-          throw FirebaseAuthException(code: 'requires-recent-login');
-        }
-      });
-      when(() => google.authenticate()).thenAnswer((_) async => 'fresh-token');
+    test(
+      'deleteAccount disconnects Google users after the server wipe',
+      () async {
+        givenProviders([AuthProviderIds.google]);
 
-      await repository.deleteAccount();
+        await repository.deleteAccount();
 
-      verify(() => google.authenticate()).called(1);
-      verify(() => user.reauthenticateWithCredential(any())).called(1);
-      verify(() => user.delete()).called(2);
-      verify(() => google.disconnect()).called(1);
-    });
+        verifyNever(() => google.authenticate());
+        verifyNever(() => user.reauthenticateWithCredential(any()));
+        verifyInOrder([
+          () => deletion.deleteAccount(),
+          () => google.disconnect(),
+          () => auth.signOut(),
+        ]);
+      },
+    );
 
     test('deleteAccount revokes Apple tokens before deleting', () async {
       givenProviders([AuthProviderIds.apple]);
@@ -301,8 +305,9 @@ void main() {
       verifyInOrder([
         () => user.reauthenticateWithCredential(any()),
         () => auth.revokeTokenWithAuthorizationCode('apple-auth-code'),
-        () => user.delete(),
+        () => deletion.deleteAccount(),
       ]);
+      verifyNever(() => user.delete());
     });
   });
 }

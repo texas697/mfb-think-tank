@@ -2,6 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mfb_think_tank/core/config/app_config.dart';
+import 'package:mfb_think_tank/features/auth/application/api_client_providers.dart';
+import 'package:mfb_think_tank/features/auth/data/account_deletion_gateway.dart';
 import 'package:mfb_think_tank/features/auth/data/apple_sign_in_gateway.dart';
 import 'package:mfb_think_tank/features/auth/data/auth_repository.dart';
 import 'package:mfb_think_tank/features/auth/data/google_sign_in_gateway.dart';
@@ -26,11 +28,18 @@ final appleSignInGatewayProvider = Provider<AppleSignInGateway>(
   (ref) => const SignInWithAppleGateway(),
 );
 
+final accountDeletionGatewayProvider = Provider<AccountDeletionGateway>(
+  // Read lazily: the API client needs a configured base URL, which plain
+  // sign-in never does.
+  (ref) => HttpAccountDeletionGateway(api: () => ref.read(apiClientProvider)),
+);
+
 final authRepositoryProvider = Provider<AuthRepository>(
   (ref) => FirebaseAuthRepository(
     auth: ref.watch(firebaseAuthProvider),
     google: ref.watch(googleSignInGatewayProvider),
     apple: ref.watch(appleSignInGatewayProvider),
+    deletion: ref.watch(accountDeletionGatewayProvider),
   ),
 );
 
