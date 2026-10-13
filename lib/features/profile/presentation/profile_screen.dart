@@ -6,6 +6,7 @@ import 'package:mfb_think_tank/features/auth/data/auth_failure.dart';
 import 'package:mfb_think_tank/features/auth/data/auth_repository.dart';
 import 'package:mfb_think_tank/features/auth/presentation/auth_action.dart';
 import 'package:mfb_think_tank/features/auth/presentation/widgets/verify_email_banner.dart';
+import 'package:mfb_think_tank/features/feedback/presentation/feedback_sheet.dart';
 
 /// Account details, sign out and account deletion.
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -85,6 +86,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               onPressed: busy ? null : _signOut,
               icon: const Icon(Icons.logout),
               label: const Text('Sign out'),
+            ),
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              key: const Key('send-feedback'),
+              onPressed: busy ? null : () => showFeedbackSheet(context),
+              icon: const Icon(Icons.feedback_outlined),
+              label: const Text('Send feedback'),
             ),
             const SizedBox(height: 32),
             Text(

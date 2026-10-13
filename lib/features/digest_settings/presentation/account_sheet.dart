@@ -6,6 +6,7 @@ import 'package:mfb_think_tank/features/auth/application/auth_providers.dart';
 import 'package:mfb_think_tank/features/digest_settings/application/me_profile_provider.dart';
 import 'package:mfb_think_tank/features/digest_settings/data/digest_settings_failure.dart';
 import 'package:mfb_think_tank/features/digest_settings/presentation/ai_settings_form.dart';
+import 'package:mfb_think_tank/features/feedback/presentation/feedback_sheet.dart';
 import 'package:mfb_think_tank/features/readers_digest/presentation/digest_colors.dart';
 import 'package:mfb_think_tank/features/readers_digest/presentation/widgets/feed_message.dart';
 
@@ -52,6 +53,18 @@ class AccountSheet extends ConsumerWidget {
             const SizedBox(height: 16),
             Text('AI write-ups', style: theme.textTheme.titleMedium),
             const SizedBox(height: 8),
+            if (profile.value case final value? when value.hasSharedLlm)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Text(
+                  key: const Key('account-shared-llm'),
+                  value.hasLlm
+                      ? 'Your own key is used for write-ups and deep dives.'
+                      : 'Write-ups and deep dives are included. Add your own '
+                            'key below only if you want unlimited use.',
+                  style: theme.textTheme.bodySmall,
+                ),
+              ),
             if (profile.value case final value?)
               AiSettingsForm(profile: value)
             else if (profile case AsyncError(:final error))
@@ -72,6 +85,17 @@ class AccountSheet extends ConsumerWidget {
                 context.go(AppRoutes.profile);
               },
               child: const Text('Profile and sign out'),
+            ),
+            OutlinedButton.icon(
+              key: const Key('account-feedback'),
+              onPressed: () {
+                // Open the next sheet from the navigator, not from this
+                // sheet's context, which is on its way out.
+                final navigator = Navigator.of(context)..pop();
+                showFeedbackSheet(navigator.context);
+              },
+              icon: const Icon(Icons.feedback_outlined),
+              label: const Text('Send feedback'),
             ),
             TextButton(
               key: const Key('account-done'),

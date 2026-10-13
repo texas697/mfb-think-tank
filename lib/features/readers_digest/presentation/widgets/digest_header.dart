@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:mfb_think_tank/features/auth/application/auth_providers.dart';
 import 'package:mfb_think_tank/features/digest_settings/presentation/account_sheet.dart';
+import 'package:mfb_think_tank/features/feedback/presentation/feedback_sheet.dart';
 import 'package:mfb_think_tank/features/readers_digest/presentation/digest_colors.dart';
 
 /// Brand row with the account button, then the screen title.
@@ -39,6 +40,12 @@ class DigestHeader extends ConsumerWidget {
                     fontFamily: 'GeistMono',
                   ),
                 ),
+              ),
+              IconButton(
+                key: const Key('open-feedback'),
+                tooltip: 'Send feedback',
+                icon: const Icon(Icons.feedback_outlined),
+                onPressed: () => showFeedbackSheet(context),
               ),
               IconButton(
                 key: const Key('open-account'),
