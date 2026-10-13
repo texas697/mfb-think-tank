@@ -54,14 +54,16 @@ Never leave a `vars:` entry empty in `codemagic.yaml` — Codemagic rejects empt
    **Workflow Editor** (builds named "Default Workflow"), click **Switch to YAML
    configuration** — otherwise `codemagic.yaml` is ignored and tags trigger nothing.
    Variables entered in the Workflow Editor are not visible to YAML builds.
-2. **Android keystore**: run `scripts/create_upload_keystore.sh`, then **Settings** (personal) /
-   **Team settings** (team) **→ codemagic.yaml settings → Code signing identities → Android keystores**: upload the
-   `.jks`, enter its password, alias `upload` and key password, reference name
-   **`upload_keystore`**. Codemagic cannot export it back — keep your own backup. Inside the
-   build the keystore is exposed as `CM_KEYSTORE_PATH`, `CM_KEYSTORE_PASSWORD`,
-   `CM_KEY_ALIAS`, `CM_KEY_PASSWORD`, which `android/app/build.gradle.kts` reads.
-   (Reference names are team-wide; for several apps give each keystore its own name and
-   update `android_signing` in that app's `codemagic.yaml`.)
+2. **Android keystore**: run `scripts/create_upload_keystore.sh`, then add an app
+   environment variable group named **`android_signing`** with four secret variables:
+   `CM_KEYSTORE` (the `.jks` as base64, `base64 -w0 android/upload-keystore.jks`),
+   `CM_KEYSTORE_PASSWORD`, `CM_KEY_ALIAS` (`upload`) and `CM_KEY_PASSWORD`. The
+   "Set up Android keystore" step decodes the file, verifies the passwords with
+   `keytool`, and exports `CM_KEYSTORE_PATH` for `android/app/build.gradle.kts`.
+   Variables are used instead of a *Code signing identities* upload because the
+   Codemagic REST API (`POST /api/v3/variable-groups/{id}/variables`) can manage
+   variables but has no endpoint for signing identities. Keep your own backup of the
+   keystore; secret variables cannot be read back.
 3. **Firebase**: run `scripts/configure_firebase.sh` and commit the output. Release
    workflows fail fast if `lib/firebase_options.dart` is still the placeholder or
    `Info.plist` still has `_PLACEHOLDER` values.
@@ -115,7 +117,8 @@ flutter test --dart-define-from-file=config/app_config.json
 
 | Symptom | Fix |
 | --- | --- |
-| `No keystore. Upload it in Codemagic as 'upload_keystore'` | Step 2 above; the reference name must match `android_signing`. |
+| `No keystore: CM_KEYSTORE is unset` | Step 2 above; the group must be named `android_signing` and attached to the app. |
+| `keytool error: ... Given final block not properly padded` | A password in the `android_signing` group is wrong. Re-import the group from `android/key.properties`. |
 | Play: `Package not found` / `The caller does not have permission` | First upload not done manually, or the service account was not granted access to this app. Permissions can take up to a day to propagate. |
 | Play: `APK specifies a version code that has already been used` | Usually a manual upload with a higher version code; the next build recomputes it from Play. |
 | Google sign-in fails only in Play-installed builds | Play App Signing SHA fingerprints missing in Firebase. |

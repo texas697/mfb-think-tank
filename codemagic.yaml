@@ -14,9 +14,14 @@
 # Workflow Editor):
 #   1. Integrations > Developer Portal (App Store Connect): add an App Store
 #      Connect API key (App Manager role) and name it exactly `codemagic_asc_key`.
-#   2. codemagic.yaml settings > Code signing identities > Android keystores:
-#      upload the upload keystore (scripts/create_upload_keystore.sh) with the
-#      reference name `upload_keystore`.
+#   2. App > Environment variables, group `android_signing` (all secret), set
+#      by scripts/create_upload_keystore.sh or by hand:
+#          CM_KEYSTORE           base64 of the upload keystore (.jks)
+#          CM_KEYSTORE_PASSWORD  keystore password
+#          CM_KEY_ALIAS          key alias (`upload`)
+#          CM_KEY_PASSWORD       key password
+#      Variables are chosen over a "Code signing identities" upload because the
+#      Codemagic API can manage variables but not identities.
 #   3. App > Environment variables (or Team > Global variables, teams only):
 #      - group `google_play`:
 #          GCLOUD_SERVICE_ACCOUNT_CREDENTIALS  (secret) Play Console service
@@ -137,13 +142,23 @@ definitions:
         fi
 
     - &check_android_keystore
-      name: Check Android keystore
+      name: Set up Android keystore
       script: |
-        # Without this the Gradle build would silently fall back to the debug key.
-        if [ -z "${CM_KEYSTORE_PATH:-}" ] || [ ! -f "$CM_KEYSTORE_PATH" ]; then
-          echo "No keystore. Upload it in Codemagic as 'upload_keystore' (android_signing)."
-          exit 1
-        fi
+        # Writes the keystore from the `android_signing` variable group and
+        # exports CM_KEYSTORE_PATH for android/app/build.gradle.kts. Without
+        # this the Gradle build would silently fall back to the debug key.
+        set -euo pipefail
+        for v in CM_KEYSTORE CM_KEYSTORE_PASSWORD CM_KEY_ALIAS CM_KEY_PASSWORD; do
+          if [ -z "${!v:-}" ]; then
+            echo "No keystore: $v is unset. Add the 'android_signing' variable group in Codemagic."
+            exit 1
+          fi
+        done
+        KEYSTORE_PATH="$CM_BUILD_DIR/upload-keystore.jks"
+        echo "$CM_KEYSTORE" | base64 --decode > "$KEYSTORE_PATH"
+        keytool -list -keystore "$KEYSTORE_PATH" -alias "$CM_KEY_ALIAS" \
+          -storepass "$CM_KEYSTORE_PASSWORD" -keypass "$CM_KEY_PASSWORD" > /dev/null
+        echo "CM_KEYSTORE_PATH=$KEYSTORE_PATH" >> "$CM_ENV"
 
     - &build_aab
       name: Build Android App Bundle
@@ -275,9 +290,8 @@ workflows:
     max_build_duration: 60
     environment:
       flutter: stable
-      android_signing:
-        - upload_keystore
       groups:
+        - android_signing
         - google_play
       vars:
         PACKAGE_NAME: *package_name
@@ -340,9 +354,8 @@ workflows:
     environment:
       flutter: stable
       xcode: "26.6" # pinned: 27.x pools were overloaded (2026-10-11, builds queued 20-40 min); App Store accepts iOS 26 SDK
-      android_signing:
-        - upload_keystore
       groups:
+        - android_signing
         - google_play
         - app_store_signing
       vars:
