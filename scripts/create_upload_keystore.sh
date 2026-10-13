@@ -2,9 +2,10 @@
 # Create the Android upload keystore and android/key.properties.
 #
 # The upload key signs the AAB you send to Google Play (Play App Signing then
-# re-signs it with the app signing key). Upload the same .jks to Codemagic with
-# reference name "upload_keystore". Lose it and you must request an upload key
-# reset from Google - back it up somewhere safe (password manager / vault).
+# re-signs it with the app signing key). Store the same .jks in Codemagic as the
+# `android_signing` variable group (see docs/CODEMAGIC.md). Lose it and you must
+# request an upload key reset from Google - back it up somewhere safe
+# (password manager / vault).
 set -euo pipefail
 
 # shellcheck source=scripts/_common.sh
@@ -127,9 +128,9 @@ cat <<EOF
 
 Next steps:
   1. Back up $keystore and its password (losing it means an upload-key reset with Google).
-  2. Codemagic > Settings (personal) / Team settings (team) > codemagic.yaml settings > Code signing identities >
-     Android keystores: upload the .jks with
-       reference name: upload_keystore   key alias: $alias_name   (passwords as above)
+  2. Codemagic > app > Environment variables: group android_signing, secret variables
+       CM_KEYSTORE=\$(base64 -w0 $keystore)  CM_KEYSTORE_PASSWORD  CM_KEY_ALIAS=$alias_name  CM_KEY_PASSWORD
+     (or POST them to /api/v3/variable-groups/<id>/variables; see docs/CODEMAGIC.md)
   3. Add the SHA-1/SHA-256 above to Firebase (or re-run scripts/configure_firebase.sh <project-id>,
      which registers them automatically).
   4. After the first Play upload, also add the Play App Signing key fingerprints

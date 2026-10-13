@@ -16,9 +16,9 @@ plugins {
 // Release signing
 //
 // Resolution order:
-//   1. Codemagic: `android_signing: [upload_keystore]` in codemagic.yaml
-//      exports CM_KEYSTORE_PATH / CM_KEYSTORE_PASSWORD / CM_KEY_ALIAS /
-//      CM_KEY_PASSWORD.
+//   1. Codemagic: the "Set up Android keystore" step in codemagic.yaml decodes
+//      the `android_signing` variable group and exports CM_KEYSTORE_PATH /
+//      CM_KEYSTORE_PASSWORD / CM_KEY_ALIAS / CM_KEY_PASSWORD.
 //   2. Local: android/key.properties (gitignored, written by
 //      scripts/create_upload_keystore.sh) with keys storeFile, storePassword,
 //      keyAlias, keyPassword. A relative storeFile is resolved against
