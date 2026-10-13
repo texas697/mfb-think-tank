@@ -45,7 +45,7 @@ class WriteupSection extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (excerpt.isNotEmpty) Text(excerpt, style: theme.textTheme.bodyLarge),
-        if (!detail.extracted)
+        if (!detail.isExtracted)
           Padding(
             padding: const EdgeInsets.only(top: 8),
             child: Text(

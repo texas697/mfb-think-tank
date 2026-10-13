@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_auth_mocks/firebase_auth_mocks.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -7,10 +9,26 @@ import 'package:mfb_think_tank/app/router.dart';
 import 'package:mfb_think_tank/features/auth/application/auth_providers.dart';
 import 'package:mfb_think_tank/features/readers_digest/application/digest_api_providers.dart';
 import 'package:mfb_think_tank/features/readers_digest/data/digest_failure.dart';
+import 'package:mfb_think_tank/features/readers_digest/data/digest_feed.dart';
+import 'package:mfb_think_tank/features/readers_digest/data/digest_query.dart';
 import 'package:mfb_think_tank/features/readers_digest/presentation/article_screen.dart';
 import 'package:mfb_think_tank/features/readers_digest/presentation/widgets/digest_filter_bar.dart';
 
 import '../../../helpers/fake_digest_repository.dart';
+
+/// Fake whose feed fetches after the first wait on [gate] before resolving.
+class GatedDigestRepository extends FakeDigestRepository {
+  GatedDigestRepository({super.items});
+
+  Completer<void>? gate;
+
+  @override
+  Future<DigestFeed> fetchFeed(DigestQuery query) async {
+    final pending = gate;
+    if (pending != null) await pending.future;
+    return super.fetchFeed(query);
+  }
+}
 
 void main() {
   late FakeDigestRepository repo;
@@ -113,6 +131,27 @@ void main() {
     expect(find.byKey(const Key('article-a')), findsNothing);
   });
 
+  testWidgets('a new search shows a reloading bar over the stale list', (
+    tester,
+  ) async {
+    final gated = GatedDigestRepository(items: [fakeCard('a')]);
+    repo = gated;
+    await pumpApp(tester);
+    expect(find.byKey(const Key('feed-reloading')), findsNothing);
+    gated.gate = Completer<void>();
+    await tester.enterText(find.byKey(const Key('digest-search')), 'Title');
+    // Debounce fires, the route is replaced, the query provider syncs on the
+    // next event-loop turn, and the feed provider then enters loading.
+    for (var i = 0; i < 4; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(find.byKey(const Key('feed-reloading')), findsOneWidget);
+    expect(find.byKey(const Key('article-a')), findsOneWidget);
+    gated.gate!.complete();
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('feed-reloading')), findsNothing);
+  });
+
   testWidgets('shows a retryable error', (tester) async {
     repo.feedError = const DigestNetwork();
     await pumpApp(tester);
@@ -121,6 +160,49 @@ void main() {
     await tester.tap(find.byKey(const Key('feed-message-action')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('article-a')), findsOneWidget);
+  });
+
+  testWidgets('a failing retry does not throw out of the UI', (tester) async {
+    repo.feedError = const DigestNetwork();
+    await pumpApp(tester);
+    final attempts = repo.queries.length;
+    await tester.tap(find.byKey(const Key('feed-message-action')));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    expect(find.text('Could not load the library'), findsOneWidget);
+    expect(repo.queries.length, greaterThan(attempts));
+  });
+
+  testWidgets('a failing pull-to-refresh keeps the list and does not throw', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    repo.feedError = const DigestNetwork();
+    await tester.fling(
+      find.byType(CustomScrollView),
+      const Offset(0, 400),
+      1000,
+    );
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    expect(find.text('Could not refresh'), findsOneWidget);
+    expect(find.byKey(const Key('article-a')), findsOneWidget);
+  });
+
+  testWidgets('a debounced search does not replace a pushed reader', (
+    tester,
+  ) async {
+    final container = await pumpApp(tester);
+    await tester.enterText(find.byKey(const Key('digest-search')), 'Title');
+    await tester.tap(find.byKey(const Key('article-a')));
+    // pumpAndSettle lets the 250 ms debounce fire with the reader on top.
+    await tester.pumpAndSettle();
+    expect(find.byType(ArticleScreen), findsOneWidget);
+    expect(repo.queries.any((query) => query.q == 'Title'), isFalse);
+    container.read(routerProvider).pop();
+    await tester.pumpAndSettle();
+    expect(find.byType(ArticleScreen), findsNothing);
+    expect(location(container), '/');
   });
 
   testWidgets('rating a card saves and shows the server rating', (

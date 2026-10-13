@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:mfb_think_tank/features/digest_settings/data/ai_provider_meta.dart';
 import 'package:mfb_think_tank/features/digest_settings/data/ai_settings.dart';
 import 'package:mfb_think_tank/features/digest_settings/data/digest_settings_failure.dart';
@@ -11,33 +13,50 @@ const fakeProviders = [
   AiProviderMeta(
     id: 'openai-compatible',
     label: 'Custom',
-    needsKey: false,
-    needsBaseUrl: true,
+    isKeyRequired: false,
+    isBaseUrlRequired: true,
   ),
 ];
 
 /// In-memory [DigestSettingsRepository] that records saved inputs.
 class FakeSettingsRepository implements DigestSettingsRepository {
-  FakeSettingsRepository({this.llm, this.byokEnabled = true});
+  FakeSettingsRepository({
+    this.llm,
+    this.isByokEnabled = true,
+    this.fetchError,
+  });
 
   AiSettings? llm;
-  final bool byokEnabled;
+  final bool isByokEnabled;
+
+  /// Thrown by [fetchMe] while set; clear it before a retry.
+  DigestSettingsFailure? fetchError;
   DigestSettingsFailure? saveError;
+
+  /// While set, save/test/remove wait on it so tests can observe the
+  /// in-progress state.
+  Completer<void>? gate;
+
   final saved = <AiSettingsInput>[];
   var removed = 0;
   var tests = 0;
 
   @override
-  Future<MeProfile> fetchMe() async => MeProfile(
-    uid: 'u1',
-    email: 'ann@example.com',
-    llm: llm,
-    providers: fakeProviders,
-    byokEnabled: byokEnabled,
-  );
+  Future<MeProfile> fetchMe() async {
+    final error = fetchError;
+    if (error != null) throw error;
+    return MeProfile(
+      uid: 'u1',
+      email: 'ann@example.com',
+      llm: llm,
+      providers: fakeProviders,
+      isByokEnabled: isByokEnabled,
+    );
+  }
 
   @override
   Future<AiSettings> saveLlm(AiSettingsInput input) async {
+    await _wait();
     final error = saveError;
     if (error != null) throw error;
     saved.add(input);
@@ -52,10 +71,19 @@ class FakeSettingsRepository implements DigestSettingsRepository {
 
   @override
   Future<void> removeLlm() async {
+    await _wait();
     removed++;
     llm = null;
   }
 
   @override
-  Future<void> testLlm() async => tests++;
+  Future<void> testLlm() async {
+    await _wait();
+    tests++;
+  }
+
+  Future<void> _wait() async {
+    final gate = this.gate;
+    if (gate != null) await gate.future;
+  }
 }

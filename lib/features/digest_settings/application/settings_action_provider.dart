@@ -1,9 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mfb_think_tank/features/digest_settings/application/digest_settings_providers.dart';
 import 'package:mfb_think_tank/features/digest_settings/application/me_profile_provider.dart';
 import 'package:mfb_think_tank/features/digest_settings/data/ai_settings.dart';
 import 'package:mfb_think_tank/features/digest_settings/data/digest_settings_failure.dart';
-import 'package:mfb_think_tank/features/readers_digest/application/digest_api_providers.dart';
 
 /// Status of the account sheet's save/test/remove actions.
 @immutable

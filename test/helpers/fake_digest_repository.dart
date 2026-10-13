@@ -46,6 +46,7 @@ class FakeDigestRepository implements DigestRepository {
 
   final queries = <DigestQuery>[];
   final ratings = <(String, int)>[];
+  var articleFetches = 0;
   var summarizeCalls = 0;
   var researchStarts = 0;
   var researchFetches = 0;
@@ -71,8 +72,10 @@ class FakeDigestRepository implements DigestRepository {
   }
 
   @override
-  Future<ArticleDetail> fetchArticle(String id) async =>
-      details[id] ?? (throw const DigestNotFound());
+  Future<ArticleDetail> fetchArticle(String id) async {
+    articleFetches++;
+    return details[id] ?? (throw const DigestNotFound());
+  }
 
   @override
   Future<int> sendRating(String id, int rating) async {

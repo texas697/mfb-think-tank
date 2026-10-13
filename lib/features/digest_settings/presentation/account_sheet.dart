@@ -4,8 +4,10 @@ import 'package:material_ui/material_ui.dart';
 import 'package:mfb_think_tank/app/router.dart';
 import 'package:mfb_think_tank/features/auth/application/auth_providers.dart';
 import 'package:mfb_think_tank/features/digest_settings/application/me_profile_provider.dart';
+import 'package:mfb_think_tank/features/digest_settings/data/digest_settings_failure.dart';
 import 'package:mfb_think_tank/features/digest_settings/presentation/ai_settings_form.dart';
 import 'package:mfb_think_tank/features/readers_digest/presentation/digest_colors.dart';
+import 'package:mfb_think_tank/features/readers_digest/presentation/widgets/feed_message.dart';
 
 /// Opens the account and AI key sheet.
 Future<void> showAccountSheet(BuildContext context) =>
@@ -52,11 +54,13 @@ class AccountSheet extends ConsumerWidget {
             const SizedBox(height: 8),
             if (profile.value case final value?)
               AiSettingsForm(profile: value)
-            else if (profile.hasError)
-              OutlinedButton(
-                key: const Key('account-retry'),
-                onPressed: () => ref.invalidate(meProfileProvider),
-                child: const Text('Could not load settings. Retry'),
+            else if (profile case AsyncError(:final error))
+              FeedMessage(
+                key: const Key('account-error'),
+                title: 'Could not load settings.',
+                body: error is DigestSettingsFailure ? error.message : null,
+                actionLabel: 'Retry',
+                onAction: () => ref.invalidate(meProfileProvider),
               )
             else
               const Center(child: CircularProgressIndicator()),

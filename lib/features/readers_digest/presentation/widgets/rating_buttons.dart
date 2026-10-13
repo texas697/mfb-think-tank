@@ -20,10 +20,7 @@ class RatingButtons extends ConsumerWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(error),
-          action: SnackBarAction(
-            label: 'Retry',
-            onPressed: () => notifier.send(next.rating),
-          ),
+          action: SnackBarAction(label: 'Retry', onPressed: notifier.retry),
         ),
       );
       notifier.clearError();

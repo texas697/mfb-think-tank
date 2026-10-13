@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mfb_think_tank/features/digest_settings/application/digest_settings_providers.dart';
 import 'package:mfb_think_tank/features/digest_settings/data/ai_settings.dart';
 import 'package:mfb_think_tank/features/digest_settings/data/me_profile.dart';
 import 'package:mfb_think_tank/features/readers_digest/application/digest_api_providers.dart';

@@ -102,21 +102,15 @@ class ApiClient {
     required Duration timeout,
     required bool forceRefresh,
   }) async {
-    final token = await _tokens.getIdToken(forceRefresh: forceRefresh);
     final url = _base.replace(
       path: '${_base.path}${_base.path.endsWith('/') ? '' : '/'}$path',
       queryParameters: (query == null || query.isEmpty) ? null : query,
     );
-    final request = http.Request(method, url)
-      ..headers.addAll({
-        'Authorization': 'Bearer $token',
-        'Accept': 'application/json',
-      });
-    if (body != null) {
-      request.headers['Content-Type'] = 'application/json';
-      request.body = body is String ? body : jsonEncode(body);
-    }
     try {
+      // Fetched inside the try so an SDK error (for example a Firebase
+      // network failure) surfaces as an ApiException like any other failure.
+      final token = await _tokens.getIdToken(forceRefresh: forceRefresh);
+      final request = _buildRequest(method, url, token: token, body: body);
       final streamed = await _http.send(request).timeout(timeout);
       final response = await http.Response.fromStream(streamed);
       return ApiResponse(statusCode: response.statusCode, body: response.body);
@@ -126,8 +120,28 @@ class ApiClient {
       throw ApiException(ApiFailureKind.network, body: e.message);
     } on ApiException {
       rethrow;
+    } on StateError catch (e) {
+      throw ApiException(ApiFailureKind.unauthorized, body: e.message);
     } catch (_) {
       throw const ApiException(ApiFailureKind.network);
     }
+  }
+
+  http.Request _buildRequest(
+    String method,
+    Uri url, {
+    required String token,
+    required Object? body,
+  }) {
+    final request = http.Request(method, url)
+      ..headers.addAll({
+        'Authorization': 'Bearer $token',
+        'Accept': 'application/json',
+      });
+    if (body != null) {
+      request.headers['Content-Type'] = 'application/json';
+      request.body = body is String ? body : jsonEncode(body);
+    }
+    return request;
   }
 }

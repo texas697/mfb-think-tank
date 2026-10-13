@@ -10,7 +10,31 @@ account/BYOK sheet required by that flow.
 
 Dashboard, maps, live media, market/stall functionality, and investment ideas
 are outside this feature. Existing sign-in and profile flows remain integration
-points. This document is a plan; application implementation has not started.
+points.
+
+## Status
+
+Implementation is complete and merged: library, reader, research lifecycle,
+account/BYOK sheet, and their tests. Crucix is deployed with Bearer Firebase ID
+token auth and `--no-cpu-throttling`. The Firebase project switch to
+`crucix-intel-41718` is done. CI/deploy pipelines exist: Codemagic runs PR-only
+CI for this app and builds releases from tags; Crucix runs GitHub Actions
+syntax+unit CI and a manually triggered, gated Cloud Run deploy via Workload
+Identity. The sections below are kept as the record of the contracts and
+decisions the implementation follows.
+
+### Remaining verification
+
+- On-device manual journey: sign in → filter/search → open article → rate →
+  connect/test key → generate write-up → start research → sign out → sign in
+  as another user.
+- Two-user isolation check: neither user can read or change the other's
+  settings, ratings, or research.
+- Visual comparison against the reference at 320/390/430-pixel widths.
+- One live AI/research run with a configured test account.
+- A stuck `running` research record recovers. The client now surfaces a
+  record that has been `running` for more than five minutes as stale and
+  allows regeneration; confirm this on a deployed instance.
 
 ## Sources of truth inspected
 
@@ -102,9 +126,8 @@ identity, and two users cannot read/change one another’s settings or research.
 Use Crucix over HTTP; leave ingestion, extraction, scoring, LLM execution, and
 Firestore ownership in the backend. Add `http`, `url_launcher`, and SVG support
 if using the supplied brand SVG. The original `flutter_markdown` package is
-discontinued; pick its maintained successor (`flutter_markdown_plus` or
-`markdown_widget`) in milestone 2 and record the choice here before the reader
-is built.
+discontinued; the reader uses its maintained successor `flutter_markdown_plus`
+(see `pubspec.yaml`), chosen in milestone 2 over `markdown_widget`.
 Bundle Geist/Geist Mono with their licenses for reproducible typography.
 
 | Interaction | Existing contract |
@@ -336,5 +359,5 @@ and no hard-coded demo content or nonfunctional controls.
    `CRUCIX_API_BASE_URL` in `config/app_config.json`.
 3. **Cloud Run CPU:** `--no-cpu-throttling` added to Crucix
    `deploy/cloudrun.sh` (Crucix branch `feature/mobile-bearer-auth`, which
-   also adds Bearer Firebase ID token support to `requireAuth`). Redeploy
-   Crucix to pick both changes up.
+   also adds Bearer Firebase ID token support to `requireAuth`). Both changes
+   are merged and deployed.

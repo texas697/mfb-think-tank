@@ -6,24 +6,24 @@ class AiProviderMeta {
   const AiProviderMeta({
     required this.id,
     required this.label,
-    this.needsKey = true,
-    this.needsBaseUrl = false,
+    this.isKeyRequired = true,
+    this.isBaseUrlRequired = false,
     this.defaultModel = '',
   });
 
   factory AiProviderMeta.fromJson(Map<String, dynamic> json) => AiProviderMeta(
     id: json['id'] as String? ?? '',
     label: json['label'] as String? ?? '',
-    needsKey: json['needsKey'] as bool? ?? true,
-    needsBaseUrl: json['needsBaseUrl'] as bool? ?? false,
+    isKeyRequired: json['needsKey'] as bool? ?? true,
+    isBaseUrlRequired: json['needsBaseUrl'] as bool? ?? false,
     defaultModel: json['defaultModel'] as String? ?? '',
   );
 
   final String id;
   final String label;
-  final bool needsKey;
+  final bool isKeyRequired;
 
   /// True for `openai-compatible`, which requires a custom base URL.
-  final bool needsBaseUrl;
+  final bool isBaseUrlRequired;
   final String defaultModel;
 }

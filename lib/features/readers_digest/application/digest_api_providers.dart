@@ -4,8 +4,6 @@ import 'package:mfb_think_tank/core/config/app_config.dart';
 import 'package:mfb_think_tank/core/network/api_client.dart';
 import 'package:mfb_think_tank/core/network/id_token_provider.dart';
 import 'package:mfb_think_tank/features/auth/application/auth_providers.dart';
-import 'package:mfb_think_tank/features/digest_settings/data/digest_settings_repository.dart';
-import 'package:mfb_think_tank/features/digest_settings/data/http_digest_settings_repository.dart';
 import 'package:mfb_think_tank/features/readers_digest/data/digest_repository.dart';
 import 'package:mfb_think_tank/features/readers_digest/data/http_digest_repository.dart';
 
@@ -43,9 +41,4 @@ final apiClientProvider = Provider<ApiClient>((ref) {
 /// Digest API contract over HTTP.
 final digestRepositoryProvider = Provider<DigestRepository>(
   (ref) => HttpDigestRepository(api: ref.watch(apiClientProvider)),
-);
-
-/// AI settings API contract over HTTP.
-final digestSettingsRepositoryProvider = Provider<DigestSettingsRepository>(
-  (ref) => HttpDigestSettingsRepository(api: ref.watch(apiClientProvider)),
 );

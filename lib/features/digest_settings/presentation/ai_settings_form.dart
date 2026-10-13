@@ -4,6 +4,7 @@ import 'package:mfb_think_tank/features/digest_settings/application/settings_act
 import 'package:mfb_think_tank/features/digest_settings/data/ai_provider_meta.dart';
 import 'package:mfb_think_tank/features/digest_settings/data/ai_settings.dart';
 import 'package:mfb_think_tank/features/digest_settings/data/me_profile.dart';
+import 'package:mfb_think_tank/features/digest_settings/presentation/ai_provider_dropdown.dart';
 import 'package:mfb_think_tank/features/digest_settings/presentation/ai_settings_actions.dart';
 
 /// Provider, model and key form. The server keeps one active configuration,
@@ -18,18 +19,15 @@ class AiSettingsForm extends ConsumerStatefulWidget {
 }
 
 class _AiSettingsFormState extends ConsumerState<AiSettingsForm> {
-  /// The three designed providers; a saved provider outside them is kept.
-  static const _designed = ['anthropic', 'openai', 'gemini'];
+  AiSettings? get _saved => widget.profile.llm;
 
-  late String _providerId = widget.profile.llm?.provider ?? _designed.first;
-  late final _model = TextEditingController(text: widget.profile.llm?.model);
-  late final _baseUrl = TextEditingController(
-    text: widget.profile.llm?.baseUrl,
-  );
+  late String _providerId =
+      _saved?.provider ?? AiProviderDropdown.designed.first;
+  late final _model = TextEditingController(text: _saved?.model);
+  late final _baseUrl = TextEditingController(text: _saved?.baseUrl);
   final _key = TextEditingController();
   String? _validation;
 
-  AiSettings? get _saved => widget.profile.llm;
   bool get _isSameProvider => _saved?.provider == _providerId;
 
   AiProviderMeta? get _meta =>
@@ -66,11 +64,11 @@ class _AiSettingsFormState extends ConsumerState<AiSettingsForm> {
     final meta = _meta;
     final key = _key.text.trim();
     final needsNewKey =
-        (meta?.needsKey ?? true) && !(_isSameProvider && _saved!.hasKey);
+        (meta?.isKeyRequired ?? true) && !(_isSameProvider && _saved!.hasKey);
     if (needsNewKey && key.isEmpty) {
       return setState(() => _validation = 'Enter an API key.');
     }
-    if ((meta?.needsBaseUrl ?? false) && _baseUrl.text.trim().isEmpty) {
+    if ((meta?.isBaseUrlRequired ?? false) && _baseUrl.text.trim().isEmpty) {
       return setState(() => _validation = 'Enter the base URL.');
     }
     setState(() => _validation = null);
@@ -92,53 +90,48 @@ class _AiSettingsFormState extends ConsumerState<AiSettingsForm> {
   Widget build(BuildContext context) {
     final action = ref.watch(settingsActionProvider);
     final meta = _meta;
-    final ids = {..._designed, if (_saved != null) _saved!.provider};
-    final options = [
-      for (final p in widget.profile.providers)
-        if (ids.contains(p.id)) p,
-    ]..sort((a, b) => _rank(a.id).compareTo(_rank(b.id)));
-    final canEdit = widget.profile.byokEnabled && !action.isBusy;
+    final canEdit = widget.profile.isByokEnabled && !action.isBusy;
+    final canType = !action.isBusy;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (!widget.profile.byokEnabled)
+        if (!widget.profile.isByokEnabled)
           const Text('Key storage is not enabled on this server.')
         else
           const Text('Your key is encrypted before it is stored.'),
         const SizedBox(height: 12),
-        DropdownButtonFormField<String>(
-          key: ValueKey(_providerId),
-          initialValue: _providerId,
-          decoration: const InputDecoration(labelText: 'Provider'),
-          items: [
-            for (final p in options)
-              DropdownMenuItem(value: p.id, child: Text(p.label)),
-          ],
+        AiProviderDropdown(
+          providers: widget.profile.providers,
+          selectedId: _providerId,
+          savedId: _saved?.provider,
           onChanged: canEdit ? _selectProvider : null,
         ),
         const SizedBox(height: 12),
         TextField(
           key: const Key('ai-model'),
           controller: _model,
+          enabled: canType,
           decoration: InputDecoration(
             labelText: 'Model',
             hintText: meta?.defaultModel,
           ),
         ),
-        if (meta?.needsBaseUrl ?? false) ...[
+        if (meta?.isBaseUrlRequired ?? false) ...[
           const SizedBox(height: 12),
           TextField(
             key: const Key('ai-base-url'),
             controller: _baseUrl,
+            enabled: canType,
             keyboardType: TextInputType.url,
             decoration: const InputDecoration(labelText: 'Base URL'),
           ),
         ],
-        if (meta?.needsKey ?? true) ...[
+        if (meta?.isKeyRequired ?? true) ...[
           const SizedBox(height: 12),
           TextField(
             key: const Key('ai-key'),
             controller: _key,
+            enabled: canType,
             obscureText: true,
             autocorrect: false,
             enableSuggestions: false,
@@ -150,27 +143,16 @@ class _AiSettingsFormState extends ConsumerState<AiSettingsForm> {
             ),
           ),
         ],
-        if (_validation != null || action.notice != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Text(
-              _validation ?? action.notice!,
-              key: const Key('ai-notice'),
-            ),
-          ),
         const SizedBox(height: 12),
         AiSettingsActions(
+          notice: _validation ?? action.notice,
           canEdit: canEdit,
-          hasSavedKey: widget.profile.hasLlm,
+          isBusy: action.isBusy,
+          hasSaved: widget.profile.hasLlm,
           isUpdate: _isSameProvider,
           onSave: _save,
         ),
       ],
     );
-  }
-
-  int _rank(String id) {
-    final index = _designed.indexOf(id);
-    return index < 0 ? _designed.length : index;
   }
 }

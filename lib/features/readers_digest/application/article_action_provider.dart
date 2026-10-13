@@ -42,13 +42,31 @@ class ArticleActionNotifier extends Notifier<ArticleActionState> {
     try {
       final refreshed = await ref.read(digestRepositoryProvider).summarize(id);
       ref.read(articleDetailProvider(id).notifier).applySummary(refreshed);
-      ref.read(digestFeedProvider.notifier).applyWriteup(id);
-      state = const ArticleActionState();
+      _markDone();
       return true;
     } catch (error) {
+      if (_mayHaveCompleted(error) && await _refreshFindsWriteup()) {
+        _markDone();
+        return true;
+      }
       state = ArticleActionState(error: _message(error));
       return false;
     }
+  }
+
+  void _markDone() {
+    ref.read(digestFeedProvider.notifier).applyWriteup(id);
+    state = const ArticleActionState();
+  }
+
+  // A timeout or dropped connection says nothing about the server, which may
+  // have finished and stored the write-up after the client gave up.
+  bool _mayHaveCompleted(Object error) =>
+      error is DigestTimeout || error is DigestNetwork;
+
+  Future<bool> _refreshFindsWriteup() async {
+    await ref.read(articleDetailProvider(id).notifier).refresh();
+    return ref.read(articleDetailProvider(id)).value?.hasWriteup ?? false;
   }
 
   /// Clears a visible error after the user acknowledges it.

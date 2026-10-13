@@ -35,8 +35,15 @@ class DigestFeedNotifier extends AsyncNotifier<DigestFeed> {
   }
 
   /// Reloads the feed; previous data stays visible while refreshing.
-  Future<DigestFeed> refresh() {
+  ///
+  /// Completes once the reload settles. A failed reload is not rethrown:
+  /// the provider's [AsyncValue] already carries the error for the UI.
+  Future<void> refresh() async {
     ref.invalidateSelf();
-    return future;
+    try {
+      await future;
+    } catch (_) {
+      // Surfaced through state as AsyncError.
+    }
   }
 }

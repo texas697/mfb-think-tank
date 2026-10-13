@@ -8,11 +8,9 @@ import 'package:mfb_think_tank/features/readers_digest/application/digest_query_
 import 'package:mfb_think_tank/features/readers_digest/application/search_debounce.dart';
 import 'package:mfb_think_tank/features/readers_digest/data/digest_query.dart';
 import 'package:mfb_think_tank/features/readers_digest/presentation/digest_theme.dart';
-import 'package:mfb_think_tank/features/readers_digest/presentation/widgets/digest_controls_header.dart';
+import 'package:mfb_think_tank/features/readers_digest/presentation/widgets/digest_controls.dart';
 import 'package:mfb_think_tank/features/readers_digest/presentation/widgets/digest_feed_body.dart';
-import 'package:mfb_think_tank/features/readers_digest/presentation/widgets/digest_filter_bar.dart';
 import 'package:mfb_think_tank/features/readers_digest/presentation/widgets/digest_header.dart';
-import 'package:mfb_think_tank/features/readers_digest/presentation/widgets/digest_search_field.dart';
 
 /// Signed-in landing screen: the Reader's Digest library for [query], which
 /// comes from the route's `filter`, `topic` and `q` parameters.
@@ -65,6 +63,8 @@ class _DigestScreenState extends ConsumerState<DigestScreen> {
 
   void _go(DigestQuery next, {bool replace = false}) {
     if (!mounted) return;
+    // A debounced replace must not swap out a reader pushed over this screen.
+    if (replace && !(ModalRoute.of(context)?.isCurrent ?? true)) return;
     final params = {
       if (next.filter != DigestQuery.filterAll) 'filter': next.filter,
       if (next.hasTopic) 'topic': next.topic,
@@ -83,9 +83,10 @@ class _DigestScreenState extends ConsumerState<DigestScreen> {
     _go(const DigestQuery());
   }
 
+  void _onFilter(String filter) => _go(widget.query.copyWith(filter: filter));
+
   @override
   Widget build(BuildContext context) {
-    final controlsHeight = 120 * DigestControlsHeader.scaleOf(context);
     return Theme(
       data: DigestTheme.data,
       child: Scaffold(
@@ -96,24 +97,11 @@ class _DigestScreenState extends ConsumerState<DigestScreen> {
               slivers: [
                 const SliverToBoxAdapter(child: DigestHeader()),
                 const SliverToBoxAdapter(child: VerifyEmailBanner()),
-                SliverPersistentHeader(
-                  pinned: true,
-                  delegate: DigestControlsHeader(
-                    height: controlsHeight,
-                    child: Column(
-                      children: [
-                        DigestSearchField(
-                          controller: _search,
-                          onChanged: _debounce.schedule,
-                        ),
-                        DigestFilterBar(
-                          selected: widget.query.filter,
-                          onSelected: (filter) =>
-                              _go(widget.query.copyWith(filter: filter)),
-                        ),
-                      ],
-                    ),
-                  ),
+                DigestControls(
+                  searchController: _search,
+                  onSearchChanged: _debounce.schedule,
+                  selectedFilter: widget.query.filter,
+                  onFilterSelected: _onFilter,
                 ),
                 DigestFeedBody(
                   query: widget.query,

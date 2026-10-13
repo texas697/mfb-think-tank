@@ -23,7 +23,10 @@ class ResearchSection extends ConsumerWidget {
         ? detail.research
         : controller.result;
     final notifier = ref.read(researchProvider(detail.id).notifier);
-    final isBusy = controller.isStarting || result.isRunning;
+    // The server accepts a new start once a running run goes stale, so the
+    // button must follow suit or a server restart leaves it disabled forever.
+    final isStale = result.isStale;
+    final isBusy = controller.isStarting || (result.isRunning && !isStale);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -40,6 +43,12 @@ class ResearchSection extends ConsumerWidget {
             style: theme.textTheme.bodySmall?.copyWith(color: colors.muted),
           ),
         ],
+        if (isStale)
+          Text(
+            'Research seems stuck. You can start it again.',
+            key: const Key('research-stuck'),
+            style: theme.textTheme.bodySmall?.copyWith(color: colors.danger),
+          ),
         if (result.isError)
           Text(
             result.error ?? 'Research failed.',
@@ -60,7 +69,11 @@ class ResearchSection extends ConsumerWidget {
           Text(_footer(result), style: theme.textTheme.labelSmall),
         ],
         if (controller.error != null)
-          Text(controller.error!, style: TextStyle(color: colors.danger)),
+          Text(
+            controller.error!,
+            key: const Key('research-controller-error'),
+            style: TextStyle(color: colors.danger),
+          ),
         const SizedBox(height: 8),
         OutlinedButton(
           key: const Key('research-start'),
@@ -68,7 +81,7 @@ class ResearchSection extends ConsumerWidget {
           child: Text(
             result.isDone
                 ? 'Regenerate research'
-                : result.isError
+                : result.isError || isStale
                 ? 'Retry research'
                 : 'Research this',
           ),
