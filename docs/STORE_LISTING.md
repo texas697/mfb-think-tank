@@ -102,5 +102,3 @@ Description:
 - Play service account needs "Edit store listing, store settings, and store
   presence" on the app before API listing updates can be committed.
 - Publisher postal address for the Play news app declaration.
-- The in-app heading "Reader's Digest" is close to a registered trademark;
-  the store listings avoid it. Consider renaming the heading before release.

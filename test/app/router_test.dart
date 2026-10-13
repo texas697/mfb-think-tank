@@ -175,7 +175,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(location(container), AppRoutes.home);
-      expect(find.text('Reader’s Digest'), findsOneWidget);
+      expect(find.text('Think Tank'), findsOneWidget);
     });
 
     testWidgets('signing out from profile returns to sign-in', (tester) async {
