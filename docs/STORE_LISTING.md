@@ -15,11 +15,11 @@ Identifiers never change: Android `com.mfbservicesinc.mfb_think_tank`, iOS
 | Name | MFB Think Tank |
 | Operator | MFB Services, Inc. |
 | Contact email (public) | rsanchezdev697@gmail.com |
-| Privacy policy | https://crucix-intel-41718.web.app/privacy |
-| Terms | https://crucix-intel-41718.web.app/terms |
-| Website (marketing) | https://crucix-intel-41718.web.app/mfb-think-tank |
-| Account deletion URL (Play) | https://crucix-intel-41718.web.app/privacy#delete-account |
-| Support URL | https://crucix-intel-41718.web.app/support |
+| Privacy policy | https://mfbintelligence.com/privacy |
+| Terms | https://mfbintelligence.com/terms |
+| Website (marketing) | https://mfbintelligence.com/mfb-think-tank |
+| Account deletion URL (Play) | https://mfbintelligence.com/privacy#delete-account |
+| Support URL | https://mfbintelligence.com/support |
 | Category | News (App Store) / News & Magazines (Play) |
 | Age rating | 17+ / Teen: text-only news coverage of real-world conflict |
 | Price | Free, no in-app purchases, no ads |
