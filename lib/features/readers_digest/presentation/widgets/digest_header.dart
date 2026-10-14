@@ -89,15 +89,22 @@ class _BrandLockup extends StatelessWidget {
           Row(
             children: [
               rule,
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                child: Text(
-                  'INTELLIGENCE',
-                  style: TextStyle(
-                    color: colors.text,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 3,
+              // Scales down under large fonts so the rules keep some width.
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: _width - 40),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    child: Text(
+                      'INTELLIGENCE',
+                      style: TextStyle(
+                        color: colors.text,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 3,
+                      ),
+                    ),
                   ),
                 ),
               ),
