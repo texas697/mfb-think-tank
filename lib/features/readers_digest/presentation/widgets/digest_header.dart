@@ -20,57 +20,54 @@ class DigestHeader extends ConsumerWidget {
     final user = ref.watch(currentUserProvider).value;
     final label = user?.displayName ?? user?.email ?? '';
     final initial = label.isEmpty ? '?' : label[0].toUpperCase();
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Taller than a default toolbar so the buttons sit at the same
-          // scale as the 44dp wordmark.
-          SizedBox(
-            height: _barHeight,
-            child: Row(
-              children: [
-                const Expanded(child: _BrandLockup()),
-                IconButton(
-                  key: const Key('open-feedback'),
-                  tooltip: 'Send feedback',
-                  iconSize: _iconSize,
-                  icon: const Icon(Icons.feedback_outlined),
-                  onPressed: () => showFeedbackSheet(context),
-                ),
-                IconButton(
-                  key: const Key('open-account'),
-                  tooltip: 'Account',
-                  iconSize: _avatarSize,
-                  icon: CircleAvatar(
-                    radius: _avatarSize / 2,
-                    backgroundColor: colors.raised,
-                    child: Text(
-                      initial,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Taller than a default toolbar so the buttons sit at the same scale
+        // as the 44dp wordmark.
+        Container(
+          height: _barHeight,
+          padding: const EdgeInsets.fromLTRB(16, 0, 8, 0),
+          decoration: BoxDecoration(
+            border: Border(bottom: BorderSide(color: colors.border)),
+          ),
+          child: Row(
+            children: [
+              const Expanded(child: _BrandLockup()),
+              IconButton(
+                key: const Key('open-feedback'),
+                tooltip: 'Send feedback',
+                iconSize: _iconSize,
+                icon: const Icon(Icons.feedback_outlined),
+                onPressed: () => showFeedbackSheet(context),
+              ),
+              IconButton(
+                key: const Key('open-account'),
+                tooltip: 'Account',
+                iconSize: _avatarSize,
+                icon: CircleAvatar(
+                  radius: _avatarSize / 2,
+                  backgroundColor: colors.raised,
+                  child: Text(
+                    initial,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                  onPressed: () => showAccountSheet(context),
                 ),
-              ],
-            ),
+                onPressed: () => showAccountSheet(context),
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            'Think Tank',
-            style: theme.textTheme.headlineMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          Text(
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+          child: Text(
             'Think tanks and news, ranked by what you rate.',
             style: theme.textTheme.bodyMedium?.copyWith(color: colors.muted),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
