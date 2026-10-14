@@ -23,12 +23,7 @@ class DigestHeader extends ConsumerWidget {
         children: [
           Row(
             children: [
-              const Expanded(
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: _BrandLockup(),
-                ),
-              ),
+              const Expanded(child: _BrandLockup()),
               IconButton(
                 key: const Key('open-feedback'),
                 tooltip: 'Send feedback',
@@ -64,53 +59,38 @@ class DigestHeader extends ConsumerWidget {
   }
 }
 
-/// MFB Services Inc. wordmark over an INTELLIGENCE rule, drawn as text so
-/// it stays legible at phone widths (the kit's one-piece navbar image does
-/// not).
+/// MFB Services Inc. wordmark, then an INTELLIGENCE tag drawn as text so it
+/// stays legible. The tag is dropped when the row is too narrow (phones).
 class _BrandLockup extends StatelessWidget {
   const _BrandLockup();
 
-  static const _width = 180.0;
+  static const _minWidthForTag = 320.0;
 
   @override
   Widget build(BuildContext context) {
     final colors = DigestColors.of(context);
-    final rule = Expanded(child: Container(height: 1, color: colors.muted));
-    return SizedBox(
-      width: _width,
-      child: Column(
+    return LayoutBuilder(
+      builder: (context, constraints) => Row(
         children: [
           Image.asset(
             'assets/brand/mfb_wordmark_dark.png',
-            width: _width,
+            height: 44,
             semanticLabel: 'MFB Services Inc.',
           ),
-          const SizedBox(height: 6),
-          Row(
-            children: [
-              rule,
-              // Scales down under large fonts so the rules keep some width.
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: _width - 40),
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    child: Text(
-                      'INTELLIGENCE',
-                      style: TextStyle(
-                        color: colors.text,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 3,
-                      ),
-                    ),
-                  ),
-                ),
+          if (constraints.maxWidth >= _minWidthForTag) ...[
+            const SizedBox(width: 14),
+            Container(width: 1, height: 28, color: colors.muted),
+            const SizedBox(width: 14),
+            Text(
+              'INTELLIGENCE',
+              style: TextStyle(
+                color: colors.text,
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 3,
               ),
-              rule,
-            ],
-          ),
+            ),
+          ],
         ],
       ),
     );
