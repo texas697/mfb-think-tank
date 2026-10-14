@@ -26,11 +26,15 @@ commit on `foss`.
 ## Prerequisites
 
 1. **License** — `LICENSE` (Apache-2.0) + `NOTICE` at the repo root. Done.
-2. **Backend auth** — the Crucix endpoints in `FDROID_BACKEND_AUTH.md` must
-   exist, or the FOSS build has no sign-in.
-3. **Fastlane metadata** — `fastlane/metadata/android/en-US/` (title, short and
+2. **Public source** — F-Droid clones the repo over unauthenticated HTTPS, so
+   the GitHub repository must be public (or a public mirror must exist) and the
+   `foss` branch pushed.
+3. **Backend auth** — the Crucix endpoints in `FDROID_BACKEND_AUTH.md`
+   (implemented on the Crucix `feat/mobile-auth` branch). The FOSS build has no
+   sign-in until they are deployed.
+4. **Fastlane metadata** — `fastlane/metadata/android/en-US/` (title, short and
    full description, changelogs, icon). Done.
-4. **Tagged `foss` releases** — every F-Droid version is an exact commit.
+5. **Tagged `foss` releases** — every F-Droid version is an exact commit.
 
 ## Phase 1 — decouple Firebase from the UI (on `main`)
 
