@@ -1,8 +1,8 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mfb_think_tank/features/auth/application/auth_providers.dart';
+import 'package:mfb_think_tank/features/auth/data/app_user.dart';
 import 'package:mfb_think_tank/features/auth/presentation/forgot_password_screen.dart';
 import 'package:mfb_think_tank/features/auth/presentation/sign_in_screen.dart';
 import 'package:mfb_think_tank/features/auth/presentation/sign_up_screen.dart';
@@ -41,7 +41,7 @@ abstract final class AppRoutes {
 /// [rememberLocation] is false (used right after the user signs out, so the
 /// next sign-in starts at home).
 String? authRedirect({
-  required AsyncValue<User?> authState,
+  required AsyncValue<AppUser?> authState,
   required Uri uri,
   bool rememberLocation = true,
 }) {
@@ -91,7 +91,7 @@ String? authRedirect({
 final routerProvider = Provider<GoRouter>((ref) {
   // Bridge Riverpod -> Listenable so GoRouter re-runs redirect on auth change
   // without the router itself being rebuilt.
-  final authState = ValueNotifier<AsyncValue<User?>>(const AsyncLoading());
+  final authState = ValueNotifier<AsyncValue<AppUser?>>(const AsyncLoading());
   var justSignedOut = false;
   ref
     ..listen(authStateChangesProvider, (previous, next) {

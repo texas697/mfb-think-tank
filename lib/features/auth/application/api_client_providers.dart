@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:mfb_think_tank/core/config/app_config.dart';
 import 'package:mfb_think_tank/core/network/api_client.dart';
 import 'package:mfb_think_tank/core/network/id_token_provider.dart';
-import 'package:mfb_think_tank/features/auth/application/auth_providers.dart';
+import 'package:mfb_think_tank/features/auth/data/firebase_auth_provider.dart';
 
 /// `package:http` client seam so tests can inject fakes.
 final httpClientProvider = Provider<http.Client>((ref) {

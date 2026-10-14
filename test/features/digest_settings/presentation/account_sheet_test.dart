@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:firebase_auth_mocks/firebase_auth_mocks.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
@@ -11,6 +10,7 @@ import 'package:mfb_think_tank/features/digest_settings/data/digest_settings_fai
 import 'package:mfb_think_tank/features/digest_settings/presentation/account_sheet.dart';
 
 import '../../../helpers/fake_settings_repository.dart';
+import '../../../helpers/mocks.dart';
 
 void main() {
   late FakeSettingsRepository repo;
@@ -22,11 +22,11 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          firebaseAuthProvider.overrideWithValue(
-            MockFirebaseAuth(
-              signedIn: true,
-              mockUser: MockUser(uid: 'u1', email: 'ann@example.com'),
-            ),
+          authStateChangesProvider.overrideWith(
+            (ref) => Stream.value(fakeAppUser()),
+          ),
+          currentUserProvider.overrideWith(
+            (ref) => Stream.value(fakeAppUser()),
           ),
           digestSettingsRepositoryProvider.overrideWithValue(repo),
         ],

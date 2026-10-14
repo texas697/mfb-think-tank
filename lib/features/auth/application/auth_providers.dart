@@ -1,9 +1,9 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mfb_think_tank/core/config/app_config.dart';
 import 'package:mfb_think_tank/features/auth/application/api_client_providers.dart';
 import 'package:mfb_think_tank/features/auth/data/account_deletion_gateway.dart';
+import 'package:mfb_think_tank/features/auth/data/app_user.dart';
 import 'package:mfb_think_tank/features/auth/data/apple_sign_in_gateway.dart';
 import 'package:mfb_think_tank/features/auth/data/auth_repository.dart';
 import 'package:mfb_think_tank/features/auth/data/google_sign_in_gateway.dart';
@@ -11,10 +11,6 @@ import 'package:mfb_think_tank/features/auth/data/google_sign_in_gateway.dart';
 /// The platform the app runs on. Override in tests.
 final targetPlatformProvider = Provider<TargetPlatform>(
   (ref) => defaultTargetPlatform,
-);
-
-final firebaseAuthProvider = Provider<FirebaseAuth>(
-  (ref) => FirebaseAuth.instance,
 );
 
 final googleSignInGatewayProvider = Provider<GoogleSignInGateway>(
@@ -35,8 +31,7 @@ final accountDeletionGatewayProvider = Provider<AccountDeletionGateway>(
 );
 
 final authRepositoryProvider = Provider<AuthRepository>(
-  (ref) => FirebaseAuthRepository(
-    auth: ref.watch(firebaseAuthProvider),
+  (ref) => createFirebaseAuthRepository(
     google: ref.watch(googleSignInGatewayProvider),
     apple: ref.watch(appleSignInGatewayProvider),
     deletion: ref.watch(accountDeletionGatewayProvider),
@@ -44,12 +39,12 @@ final authRepositoryProvider = Provider<AuthRepository>(
 );
 
 /// Signed-in user, updated on sign-in/out only. Drives routing.
-final authStateChangesProvider = StreamProvider<User?>(
+final authStateChangesProvider = StreamProvider<AppUser?>(
   (ref) => ref.watch(authRepositoryProvider).authStateChanges(),
 );
 
 /// Signed-in user, also updated on profile changes. Use for display.
-final currentUserProvider = StreamProvider<User?>(
+final currentUserProvider = StreamProvider<AppUser?>(
   (ref) => ref.watch(authRepositoryProvider).userChanges(),
 );
 

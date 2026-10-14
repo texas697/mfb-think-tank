@@ -44,7 +44,7 @@ class _VerifyEmailBannerState extends ConsumerState<VerifyEmailBanner>
     final needsVerification =
         user != null &&
         !user.emailVerified &&
-        user.providerData.any((p) => p.providerId == AuthProviderIds.password);
+        user.hasProvider(AuthProviderIds.password);
     if (!needsVerification) return const SizedBox.shrink();
 
     final colors = Theme.of(context).colorScheme;

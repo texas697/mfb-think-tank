@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:firebase_auth_mocks/firebase_auth_mocks.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
@@ -15,6 +14,7 @@ import 'package:mfb_think_tank/features/readers_digest/presentation/article_scre
 import 'package:mfb_think_tank/features/readers_digest/presentation/widgets/digest_filter_bar.dart';
 
 import '../../../helpers/fake_digest_repository.dart';
+import '../../../helpers/mocks.dart';
 
 /// Fake whose feed fetches after the first wait on [gate] before resolving.
 class GatedDigestRepository extends FakeDigestRepository {
@@ -46,11 +46,11 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          firebaseAuthProvider.overrideWithValue(
-            MockFirebaseAuth(
-              signedIn: true,
-              mockUser: MockUser(uid: 'u1', email: 'ann@example.com'),
-            ),
+          authStateChangesProvider.overrideWith(
+            (ref) => Stream.value(fakeAppUser()),
+          ),
+          currentUserProvider.overrideWith(
+            (ref) => Stream.value(fakeAppUser()),
           ),
           digestRepositoryProvider.overrideWithValue(repo),
         ],

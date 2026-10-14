@@ -7,6 +7,8 @@ import 'package:material_ui/material_ui.dart';
 import 'package:mfb_think_tank/app/app.dart';
 import 'package:mfb_think_tank/app/router.dart';
 import 'package:mfb_think_tank/features/auth/application/auth_providers.dart';
+import 'package:mfb_think_tank/features/auth/data/app_user.dart';
+import 'package:mfb_think_tank/features/auth/data/auth_repository.dart';
 import 'package:mfb_think_tank/features/readers_digest/application/digest_api_providers.dart';
 
 import '../helpers/fake_digest_repository.dart';
@@ -14,13 +16,13 @@ import '../helpers/mocks.dart';
 
 void main() {
   group('authRedirect', () {
-    final user = MockUser(uid: 'u1');
-    const loading = AsyncLoading<User?>();
-    const signedOut = AsyncData<User?>(null);
-    final signedIn = AsyncData<User?>(user);
+    const user = AppUser(uid: 'u1');
+    const loading = AsyncLoading<AppUser?>();
+    const signedOut = AsyncData<AppUser?>(null);
+    const signedIn = AsyncData<AppUser?>(user);
 
     String? redirect(
-      AsyncValue<User?> state,
+      AsyncValue<AppUser?> state,
       String location, {
       bool rememberLocation = true,
     }) => authRedirect(
@@ -114,13 +116,20 @@ void main() {
     });
 
     test('treats an auth error as signed out', () {
-      final error = AsyncError<User?>(Exception('x'), StackTrace.empty);
+      final error = AsyncError<AppUser?>(Exception('x'), StackTrace.empty);
       expect(redirect(error, AppRoutes.home), AppRoutes.signIn);
     });
   });
 
   group('router + auth state', () {
     late MockFirebaseAuth auth;
+
+    AuthRepository repositoryWith(FirebaseAuth auth) => FirebaseAuthRepository(
+      auth: auth,
+      google: MockGoogleSignInGateway(),
+      apple: MockAppleSignInGateway(),
+      deletion: MockAccountDeletionGateway(),
+    );
 
     Future<ProviderContainer> pumpApp(WidgetTester tester) async {
       tester.view.physicalSize = const Size(1080, 2400);
@@ -130,13 +139,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            firebaseAuthProvider.overrideWithValue(auth),
-            googleSignInGatewayProvider.overrideWithValue(
-              MockGoogleSignInGateway(),
-            ),
-            appleSignInGatewayProvider.overrideWithValue(
-              MockAppleSignInGateway(),
-            ),
+            authRepositoryProvider.overrideWithValue(repositoryWith(auth)),
             digestRepositoryProvider.overrideWithValue(FakeDigestRepository()),
           ],
           child: const App(),

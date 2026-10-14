@@ -1,7 +1,7 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:mfb_think_tank/features/auth/application/auth_providers.dart';
+import 'package:mfb_think_tank/features/auth/data/app_user.dart';
 import 'package:mfb_think_tank/features/auth/data/auth_failure.dart';
 import 'package:mfb_think_tank/features/auth/data/auth_repository.dart';
 import 'package:mfb_think_tank/features/auth/presentation/auth_action.dart';
@@ -21,10 +21,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   Future<void> _signOut() =>
       runAuthAction(() => ref.read(authRepositoryProvider).signOut());
 
-  Future<void> _deleteAccount(User user) async {
-    final usesPassword = user.providerData.any(
-      (p) => p.providerId == AuthProviderIds.password,
-    );
+  Future<void> _deleteAccount(AppUser user) async {
+    final usesPassword = user.hasProvider(AuthProviderIds.password);
     final confirmation = await showDialog<_DeleteConfirmation>(
       context: context,
       builder: (_) => _DeleteAccountDialog(askForPassword: usesPassword),
@@ -57,7 +55,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     }
 
     final name = user.displayName;
-    final providers = user.providerData.map((p) => p.providerId).toSet();
+    final providers = user.providerIds.toSet();
 
     return Scaffold(
       appBar: AppBar(title: const Text('Profile')),
