@@ -1,0 +1,1 @@
+First F-Droid release, based on MFB Think Tank 0.2.2. Firebase and Google Play Services are not included in this build; sign-in uses the self-hosted account service.
