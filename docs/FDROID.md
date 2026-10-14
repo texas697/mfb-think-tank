@@ -58,10 +58,13 @@ from `main` is intentionally small (~15 files):
 - Delete `lib/firebase_options.dart`, `lib/app/firebase_setup_app.dart`,
   `lib/features/auth/data/google_sign_in_gateway.dart`,
   `lib/features/auth/data/apple_sign_in_gateway.dart`.
-- Add `lib/features/auth/data/backend_auth_repository.dart`
+- Add `lib/features/auth/data/backend_session.dart` (token/user session +
+  `shared_preferences` persistence), `lib/features/auth/data/backend_auth_api.dart`
+  (JSON transport → `AuthFailure`), `lib/features/auth/data/backend_auth_repository.dart`
   (`BackendAuthRepository implements AuthRepository`) and
   `lib/features/auth/data/backend_id_token_provider.dart`
-  (`BackendIdTokenProvider implements IdTokenProvider`).
+  (`BackendIdTokenProvider implements IdTokenProvider`). Add the
+  `shared_preferences` dependency.
 - `lib/features/auth/application/auth_providers.dart` — wire the backend
   implementations; `socialSignInOptionsProvider` reports Google and Apple off
   (the buttons already hide themselves).

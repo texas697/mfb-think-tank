@@ -64,7 +64,7 @@ Repo: https://github.com/texas697/mfb-think-tank.git
 Builds:
   - versionName: 0.2.2
     versionCode: 1
-    commit: <PLACEHOLDER: full 40-char commit hash on the foss branch>
+    commit: f210cc5c76836c0d3a0c995351ffe2654c067cf4
     output: build/app/outputs/flutter-apk/app-release.apk
     srclibs:
       - flutter@3.47.7
