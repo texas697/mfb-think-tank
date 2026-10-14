@@ -100,5 +100,5 @@ The Web API key comes from `FIREBASE_WEB_API_KEY`, else the `apiKey` inside
 ## Anti-feature disclosure
 
 Because the FOSS client depends entirely on the proprietary Crucix service,
-the fdroiddata metadata carries `NonFreeNet` (and `TetheredNetworkServices`).
+the fdroiddata metadata carries `NonFreeNet` (and `TetheredNet`).
 That is a disclosure flag, not a rejection. See `docs/FDROID.md`.
