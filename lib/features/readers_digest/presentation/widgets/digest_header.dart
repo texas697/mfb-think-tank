@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:mfb_think_tank/features/auth/application/auth_providers.dart';
 import 'package:mfb_think_tank/features/digest_settings/presentation/account_sheet.dart';
@@ -24,20 +23,13 @@ class DigestHeader extends ConsumerWidget {
         children: [
           Row(
             children: [
-              SvgPicture.asset(
-                'assets/brand/mark.svg',
-                width: 28,
-                height: 28,
-                semanticsLabel: 'MFB Services Intelligence',
-              ),
-              const SizedBox(width: 8),
               Expanded(
-                child: Text(
-                  'MFB SERVICES',
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: colors.muted,
-                    fontFamily: 'GeistMono',
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Image.asset(
+                    'assets/brand/mfb_wordmark_dark.png',
+                    height: 28,
+                    semanticLabel: 'MFB Services Intelligence',
                   ),
                 ),
               ),

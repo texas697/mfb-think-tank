@@ -15,8 +15,9 @@ class FirebaseSetupApp extends StatelessWidget {
     return MaterialApp(
       title: appTitle,
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
+      theme: AppTheme.dark,
       darkTheme: AppTheme.dark,
+      themeMode: ThemeMode.dark,
       home: _FirebaseSetupScreen(details: details),
     );
   }

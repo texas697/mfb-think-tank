@@ -8,13 +8,14 @@ class DigestColors extends ThemeExtension<DigestColors> {
   final Color background = const Color(0xFF05070B);
   final Color card = const Color(0xFF0A0D14);
   final Color raised = const Color(0xFF111520);
-  final Color border = const Color(0xFF1E2433);
-  final Color accent = const Color(0xFF4F8CFF);
-  final Color thinkTank = const Color(0xFFA78BFA);
-  final Color news = const Color(0xFF4F8CFF);
-  final Color text = const Color(0xFFE8EBF2);
-  final Color muted = const Color(0xFF9AA3B8);
-  final Color danger = const Color(0xFFF87171);
+  final Color border = const Color(0xFF1A1E29);
+  final Color accent = const Color(0xFFDCE2EC);
+  final Color onAccent = const Color(0xFF0A0F1F);
+  final Color thinkTank = const Color(0xFFB9BEC4);
+  final Color news = const Color(0xFFDCE2EC);
+  final Color text = const Color(0xFFE9ECF2);
+  final Color muted = const Color(0xFF8A94A8);
+  final Color danger = const Color(0xFFFFB4AB);
 
   /// Colors for the nearest [Theme] (see `DigestTheme`).
   static DigestColors of(BuildContext context) =>
