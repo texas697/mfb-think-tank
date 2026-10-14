@@ -1,0 +1,91 @@
+# F-Droid metadata for MFB Think Tank.
+#
+# Reference copy. To submit, copy this file into a fork of
+# https://gitlab.com/fdroid/fdroiddata as
+#   metadata/com.mfbservicesinc.mfb_think_tank.yml
+# and replace the two <PLACEHOLDER> values (full commit hash on the `foss`
+# branch). See docs/FDROID.md for the full process.
+
+Categories:
+  - News
+
+License: Apache-2.0
+
+AuthorName: MFB Services, Inc.
+AuthorEmail: rsanchezdev697@gmail.com
+AuthorWebSite: https://mfbintelligence.com/mfb-think-tank
+
+WebSite: https://mfbintelligence.com/mfb-think-tank
+SourceCode: https://github.com/texas697/mfb-think-tank
+IssueTracker: https://github.com/texas697/mfb-think-tank/issues
+Changelog: https://github.com/texas697/mfb-think-tank/releases
+
+AutoName: MFB Think Tank
+
+Summary: Think-tank analysis with AI write-ups and a feed that learns
+
+Description: |-
+  MFB Think Tank collects long-form analysis from think tanks and the policy
+  press in one feed, and helps you get through it faster.
+
+  AI write-ups. Open any piece for a TL;DR, key points, why it matters and what
+  to watch for. Pieces without a write-up can be summarized on demand with your
+  own AI key.
+
+  A feed that learns. Give a thumbs up or down to any piece. After five ratings
+  the feed re-ranks itself around the topics you care about, and the For You
+  filter shows only what matches your taste.
+
+  Deep dives. Tap "Read more about it" on any story. MFB Think Tank gathers
+  related coverage from across the web and has your model write a cited
+  companion piece: background, competing interpretations, implications and what
+  to watch. Results are saved to your account.
+
+  Search and filter. Search titles, topics and write-ups. Filter by think tanks
+  or news, and narrow by topic: defense, energy, markets, technology, Europe,
+  Asia Pacific and more.
+
+  Bring your own key. Connect an Anthropic, OpenAI, Gemini or other supported
+  API key. Your key is encrypted at rest and used only for your own write-ups
+  and deep dives.
+
+  This is the free-software build. It ships no proprietary SDKs: no Firebase, no
+  Google Play Services, no advertising or analytics libraries. It signs in
+  against the MFB Think Tank account service and talks to the MFB Think Tank API
+  over HTTPS.
+
+AntiFeatures:
+  - NonFreeNet
+  - TetheredNetworkServices
+
+RepoType: git
+Repo: https://github.com/texas697/mfb-think-tank.git
+
+Builds:
+  - versionName: 0.2.2
+    versionCode: 1
+    commit: <PLACEHOLDER: full 40-char commit hash on the foss branch>
+    output: build/app/outputs/flutter-apk/app-release.apk
+    srclibs:
+      - flutter@3.47.7
+    rm:
+      - ios
+      - linux
+      - macos
+      - web
+      - windows
+    prebuild:
+      - export PUB_CACHE=$PWD/.pub-cache
+      - $$flutter$$/bin/flutter config --no-analytics
+      - $$flutter$$/bin/flutter pub get --enforce-lockfile
+    scandelete:
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$PWD/.pub-cache
+      - $$flutter$$/bin/flutter build apk --release
+
+AutoUpdateMode: Version
+UpdateCheckMode: Tags
+UpdateCheckData: pubspec.yaml|version:\s.+\+(\d+)|.|version:\s([0-9.]+)
+CurrentVersion: 0.2.2
+CurrentVersionCode: 1
