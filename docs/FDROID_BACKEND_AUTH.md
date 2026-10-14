@@ -1,20 +1,19 @@
 # Backend auth contract for the F-Droid (free-software) build
 
-**Status: REQUIRED — not yet implemented in Crucix.** This file is the contract
-the Crucix repo (`server.mjs`, `lib/auth/*.mjs`) must satisfy before the FOSS
-build can sign in.
+**Status: implemented on the Crucix `feat/mobile-auth` branch.** Crucix proxies
+Firebase Auth's Identity Toolkit REST API, so a Firebase-SDK-free client can
+obtain a **real Firebase ID token** by talking only to Crucix.
 
 ## Why
 
 F-Droid's Inclusion Policy forbids Firebase and Google Play Services in the
 shipped APK, and its build-time dex scan rejects any APK containing
 `com/google/firebase/...` or `com/google/android/gms/...` classes. The Play and
-App Store builds keep Firebase Auth untouched. The `foss` build
-(`feat/fdroid` → `foss` branch) drops the Firebase SDKs and therefore cannot
-produce Firebase ID tokens. It needs a Crucix-issued credential instead.
+App Store builds keep Firebase Auth untouched. The `foss` build drops the
+Firebase SDK and therefore cannot mint a Firebase ID token on-device — it asks
+Crucix for one instead.
 
-The app already isolates this behind two seams, so no UI or feature code
-changes:
+The app isolates this behind two seams, so no UI or feature code changes:
 
 - `lib/features/auth/data/auth_repository.dart` — `AuthRepository`
 - `lib/core/network/id_token_provider.dart` — `IdTokenProvider`
@@ -22,42 +21,40 @@ changes:
 `ApiClient` (`lib/core/network/api_client.dart`) is unchanged: it asks the
 `IdTokenProvider` for a string and sets `Authorization: Bearer <token>`.
 
-## Token format
+## How it works
 
-- JWT (HS256 or RS256), with claims: `iss: "crucix"`, `sub: <user id>`,
-  `email`, `exp` (short-lived, ~1 h), `iat`.
-- Sent exactly as today: `Authorization: Bearer <jwt>`.
-- Refresh tokens are opaque and rotated on every refresh.
+`requireAuth` (`lib/auth/firebase.mjs`) already verifies
+`Authorization: Bearer <Firebase ID token>` via `verifyIdToken`. The FOSS client
+just needs a way to *get* that token without the SDK. Crucix provides it:
 
-## Middleware change
+1. Client `POST /api/auth/signin {email, password}`.
+2. Crucix calls Identity Toolkit
+   `accounts:signInWithPassword?key=<WEB_API_KEY>` (key stays server-side) and
+   receives `{idToken, refreshToken, ...}`.
+3. Crucix verifies the token and returns
+   `{token: <idToken>, refreshToken, user}`.
 
-`requireAuth` (today `lib/auth/firebase.mjs`, branch
-`feature/mobile-bearer-auth`) must accept **both** credential types:
+No new token type, **no middleware change**, and Play / F-Droid share the same
+Firebase accounts.
 
-1. Firebase ID token — verified with `verifyIdToken` (Play/App Store clients).
-2. Crucix-issued JWT — verified with the Crucix signing key (FOSS clients).
+## Endpoints
 
-Distinguish by the `iss` claim. A Firebase token's issuer is
-`https://securetoken.google.com/<project-id>`; Crucix's is `"crucix"`.
+All under the existing `CRUCIX_API_BASE_URL`
+(`https://crucix-qa65slel7a-uc.a.run.app`). Public (no session cookie).
 
-## Endpoints to add
-
-All are under the existing `CRUCIX_API_BASE_URL`
-(`https://crucix-qa65slel7a-uc.a.run.app`).
-
-| Method | Path | Body | Success response |
+| Method | Path | Body | Success |
 | --- | --- | --- | --- |
-| POST | `/api/auth/signup` | `{email, password, displayName?}` | `{token, refreshToken, user}` |
-| POST | `/api/auth/signin` | `{email, password}` | `{token, refreshToken, user}` |
-| POST | `/api/auth/refresh` | `{refreshToken}` | `{token, refreshToken}` |
-| POST | `/api/auth/reset-password` | `{email}` | `204` |
-| POST | `/api/auth/verify-email` | `{}` (Bearer auth) | `204` |
+| POST | `/api/auth/signup` | `{email, password, displayName?}` | `200 {token, refreshToken, user}` |
+| POST | `/api/auth/signin` | `{email, password}` | `200 {token, refreshToken, user}` |
+| POST | `/api/auth/refresh` | `{refreshToken}` | `200 {token, refreshToken}` |
+| POST | `/api/auth/reset-password` | `{email}` | `200 {ok: true}` |
+| POST | `/api/auth/verify-email` | `{}` (Bearer ID token) | `200 {ok: true}` |
 
-`user` has the shape the FOSS `BackendAuthRepository` maps to `AppUser`:
+`user` is the shape `BackendAuthRepository` maps to `AppUser`:
 
 ```json
 {
-  "uid": "usr_123",
+  "uid": "abc123",
   "email": "user@example.com",
   "displayName": "Ada",
   "emailVerified": false,
@@ -65,32 +62,43 @@ All are under the existing `CRUCIX_API_BASE_URL`
 }
 ```
 
-Existing endpoints the FOSS build reuses unchanged: `GET /api/me` (profile
-reload), `DELETE /api/me` (account deletion, already used by
-`HttpAccountDeletionGateway`).
+`signup` honors the existing policy: `AUTH_ALLOW_SIGNUP=false` → `403`
+`signup-disabled`; an address outside `AUTH_ALLOWED_EMAILS` /
+`AUTH_ALLOWED_DOMAINS` → `403` `not-allowed`.
+
+Existing endpoints reused unchanged: `GET /api/me` (profile reload),
+`DELETE /api/me` (account deletion).
 
 ## Error shape
 
 ```json
-{ "error": { "code": "wrong-password", "message": "…" } }
+{ "error": { "code": "invalid-credential", "message": "…" } }
 ```
 
-Use the code strings `AuthFailure.messageForCode`
-(`lib/features/auth/data/auth_failure.dart`) already understands, so the FOSS
-repository maps them without change: `invalid-credential`,
-`email-already-in-use`, `weak-password`, `user-not-found`, `wrong-password`,
-`too-many-requests`, `invalid-email`, `user-disabled`, `network-request-failed`.
+Codes are the strings `AuthFailure.messageForCode`
+(`lib/features/auth/data/auth_failure.dart`) understands, so the client maps
+them without change: `invalid-credential`, `email-already-in-use`,
+`weak-password`, `user-not-found`, `too-many-requests`, `invalid-email`,
+`user-disabled`, `requires-recent-login`.
 
-## Security requirements
+## Configuration
 
-- Hash passwords with Argon2id (preferred) or bcrypt; never store plaintext.
-- Rate-limit `signin` / `reset-password` and return `too-many-requests`.
-- Rotate refresh tokens and revoke the family on reuse.
-- The reset/verify emails must link back to the backend, not Firebase.
-- Keep TLS-only transport; the app targets HTTPS.
+The Web API key comes from `FIREBASE_WEB_API_KEY`, else the `apiKey` inside
+`FIREBASE_WEB_CONFIG`. If neither is set, all five endpoints return
+`503 {error:{code:"unavailable"}}` and nothing else changes.
+
+## Security
+
+- Passwords are never stored by Crucix; Firebase Identity Toolkit hashes them
+  and applies its own rate limiting / abuse protection (`TOO_MANY_ATTEMPTS` →
+  `too-many-requests`).
+- The Web API key stays server-side; it is not shipped in the APK.
+- Password-reset and verification emails are sent by Firebase, so they use the
+  existing Firebase email templates adding no new infrastructure.
+- TLS-only transport; the app targets HTTPS.
 
 ## Anti-feature disclosure
 
 Because the FOSS client depends entirely on the proprietary Crucix service,
-the fdroiddata metadata carries `NonFreeNet` (and likely `Tethered Network
-Services`). That is a disclosure flag, not a rejection. See `docs/FDROID.md`.
+the fdroiddata metadata carries `NonFreeNet` (and `TetheredNetworkServices`).
+That is a disclosure flag, not a rejection. See `docs/FDROID.md`.
