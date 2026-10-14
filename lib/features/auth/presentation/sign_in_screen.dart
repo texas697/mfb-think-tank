@@ -2,7 +2,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:mfb_think_tank/app/app.dart';
 import 'package:mfb_think_tank/app/router.dart';
 import 'package:mfb_think_tank/features/auth/application/auth_providers.dart';
 import 'package:mfb_think_tank/features/auth/presentation/auth_action.dart';
@@ -55,7 +54,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen>
     String withQuery(String path) => query.isEmpty ? path : '$path?$query';
 
     return AuthScaffold(
-      title: appTitle,
+      showLogo: true,
       subtitle: 'Sign in to continue',
       children: [
         Form(

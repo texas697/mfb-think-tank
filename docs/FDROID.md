@@ -26,11 +26,15 @@ commit on `foss`.
 ## Prerequisites
 
 1. **License** — `LICENSE` (Apache-2.0) + `NOTICE` at the repo root. Done.
-2. **Backend auth** — the Crucix endpoints in `FDROID_BACKEND_AUTH.md` must
-   exist, or the FOSS build has no sign-in.
-3. **Fastlane metadata** — `fastlane/metadata/android/en-US/` (title, short and
+2. **Public source** — F-Droid clones the repo over unauthenticated HTTPS, so
+   the GitHub repository must be public (or a public mirror must exist) and the
+   `foss` branch pushed.
+3. **Backend auth** — the Crucix endpoints in `FDROID_BACKEND_AUTH.md`
+   (implemented on the Crucix `feat/mobile-auth` branch). The FOSS build has no
+   sign-in until they are deployed.
+4. **Fastlane metadata** — `fastlane/metadata/android/en-US/` (title, short and
    full description, changelogs, icon). Done.
-4. **Tagged `foss` releases** — every F-Droid version is an exact commit.
+5. **Tagged `foss` releases** — every F-Droid version is an exact commit.
 
 ## Phase 1 — decouple Firebase from the UI (on `main`)
 
@@ -58,10 +62,13 @@ from `main` is intentionally small (~15 files):
 - Delete `lib/firebase_options.dart`, `lib/app/firebase_setup_app.dart`,
   `lib/features/auth/data/google_sign_in_gateway.dart`,
   `lib/features/auth/data/apple_sign_in_gateway.dart`.
-- Add `lib/features/auth/data/backend_auth_repository.dart`
+- Add `lib/features/auth/data/backend_session.dart` (token/user session +
+  `shared_preferences` persistence), `lib/features/auth/data/backend_auth_api.dart`
+  (JSON transport → `AuthFailure`), `lib/features/auth/data/backend_auth_repository.dart`
   (`BackendAuthRepository implements AuthRepository`) and
   `lib/features/auth/data/backend_id_token_provider.dart`
-  (`BackendIdTokenProvider implements IdTokenProvider`).
+  (`BackendIdTokenProvider implements IdTokenProvider`). Add the
+  `shared_preferences` dependency.
 - `lib/features/auth/application/auth_providers.dart` — wire the backend
   implementations; `socialSignInOptionsProvider` reports Google and Apple off
   (the buttons already hide themselves).

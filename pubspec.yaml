@@ -1,7 +1,7 @@
 name: mfb_think_tank
 description: "MFB Think Tank - find the signal in the noise."
 publish_to: 'none'
-version: 0.2.2+1
+version: 0.3.1+1
 
 environment:
   sdk: ^3.13.5
@@ -12,7 +12,6 @@ dependencies:
     sdk: flutter
   flutter_markdown_plus: ^1.0.12
   flutter_riverpod: ^3.4.3
-  flutter_svg: ^2.3.0
   go_router: ^18.0.2
   http: ^1.6.0
   material_ui: ^1.6.0
@@ -47,7 +46,8 @@ flutter_launcher_icons:
   image_path: assets/icon/icon.png
   android: true
   min_sdk_android: 24
-  adaptive_icon_background: "#0a0d14"
+  adaptive_icon_background: "#0B0B0C"
   adaptive_icon_foreground: assets/icon/icon_foreground.png
+  adaptive_icon_monochrome: assets/icon/icon_monochrome.png
   ios: true
   remove_alpha_ios: true
