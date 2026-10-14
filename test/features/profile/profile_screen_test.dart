@@ -1,8 +1,8 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:mfb_think_tank/features/auth/application/auth_providers.dart';
+import 'package:mfb_think_tank/features/auth/data/app_user.dart';
 import 'package:mfb_think_tank/features/auth/data/auth_repository.dart';
 import 'package:mfb_think_tank/features/profile/presentation/profile_screen.dart';
 import 'package:mocktail/mocktail.dart';
@@ -11,26 +11,22 @@ import '../../helpers/mocks.dart';
 
 void main() {
   late MockAuthRepository repository;
-  late MockFirebaseUser user;
 
   setUp(() {
     repository = MockAuthRepository();
-    user = MockFirebaseUser();
-    when(() => user.email).thenReturn('ann@example.com');
-    when(() => user.displayName).thenReturn('Ann');
-    when(() => user.emailVerified).thenReturn(true);
     when(() => repository.deleteAccount(password: any(named: 'password')))
         .thenAnswer((_) async {});
   });
 
   Future<void> pumpProfile(WidgetTester tester, List<String> providers) async {
-    when(() => user.providerData)
-        .thenReturn([for (final id in providers) FakeUserInfo(id)]);
+    final user = fakeAppUser(providerIds: providers);
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
           authRepositoryProvider.overrideWithValue(repository),
-          currentUserProvider.overrideWith((ref) => Stream<User?>.value(user)),
+          currentUserProvider.overrideWith(
+            (ref) => Stream<AppUser?>.value(user),
+          ),
         ],
         child: const MaterialApp(home: ProfileScreen()),
       ),

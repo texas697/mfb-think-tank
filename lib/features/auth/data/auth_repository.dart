@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:mfb_think_tank/features/auth/data/account_deletion_gateway.dart';
+import 'package:mfb_think_tank/features/auth/data/app_user.dart';
 import 'package:mfb_think_tank/features/auth/data/apple_sign_in_gateway.dart';
 import 'package:mfb_think_tank/features/auth/data/auth_failure.dart';
 import 'package:mfb_think_tank/features/auth/data/google_sign_in_gateway.dart';
@@ -18,12 +19,12 @@ abstract final class AuthProviderIds {
 /// All methods throw [AuthFailure] on error, never provider-specific types.
 abstract interface class AuthRepository {
   /// Emits on sign-in and sign-out.
-  Stream<User?> authStateChanges();
+  Stream<AppUser?> authStateChanges();
 
   /// Emits on sign-in, sign-out and profile changes (e.g. display name).
-  Stream<User?> userChanges();
+  Stream<AppUser?> userChanges();
 
-  User? get currentUser;
+  AppUser? get currentUser;
 
   Future<void> signInWithEmail({
     required String email,
@@ -78,13 +79,28 @@ class FirebaseAuthRepository implements AuthRepository {
   final String Function() _generateNonce;
 
   @override
-  Stream<User?> authStateChanges() => _auth.authStateChanges();
+  Stream<AppUser?> authStateChanges() =>
+      _auth.authStateChanges().map(_toAppUserOrNull);
 
   @override
-  Stream<User?> userChanges() => _auth.userChanges();
+  Stream<AppUser?> userChanges() => _auth.userChanges().map(_toAppUserOrNull);
 
   @override
-  User? get currentUser => _auth.currentUser;
+  AppUser? get currentUser {
+    final user = _auth.currentUser;
+    return user == null ? null : _toAppUser(user);
+  }
+
+  static AppUser? _toAppUserOrNull(User? user) =>
+      user == null ? null : _toAppUser(user);
+
+  static AppUser _toAppUser(User user) => AppUser(
+    uid: user.uid,
+    email: user.email,
+    displayName: user.displayName,
+    emailVerified: user.emailVerified,
+    providerIds: [for (final p in user.providerData) p.providerId],
+  );
 
   User get _requireUser =>
       _auth.currentUser ??
@@ -222,10 +238,25 @@ class FirebaseAuthRepository implements AuthRepository {
     } on AuthFailure {
       rethrow;
     } on FirebaseAuthException catch (e) {
-      throw AuthFailure.fromFirebase(e);
+      throw AuthFailure(e.code, AuthFailure.messageForCode(e.code));
     } on Object catch (e, stack) {
       debugPrint('Unexpected auth error: $e\n$stack');
       throw const AuthFailure.unknown();
     }
   }
 }
+
+/// Builds the Firebase-backed [AuthRepository] the app runs on.
+///
+/// Constructs `FirebaseAuth.instance` here so callers outside `data/` never
+/// name a Firebase type.
+AuthRepository createFirebaseAuthRepository({
+  required GoogleSignInGateway google,
+  required AppleSignInGateway apple,
+  required AccountDeletionGateway deletion,
+}) => FirebaseAuthRepository(
+  auth: FirebaseAuth.instance,
+  google: google,
+  apple: apple,
+  deletion: deletion,
+);

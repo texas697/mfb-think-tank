@@ -28,7 +28,7 @@ class AccountSheet extends ConsumerWidget {
     final theme = Theme.of(context);
     final user = ref.watch(currentUserProvider).value;
     final profile = ref.watch(meProfileProvider);
-    final providers = user?.providerData.map((p) => p.providerId).join(', ');
+    final providers = user?.providerIds.join(', ');
     return Padding(
       padding: EdgeInsets.fromLTRB(
         16,

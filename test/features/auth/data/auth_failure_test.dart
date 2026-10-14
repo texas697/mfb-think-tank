@@ -1,12 +1,12 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mfb_think_tank/features/auth/data/auth_failure.dart';
 
 void main() {
-  group('AuthFailure.fromFirebase', () {
-    test('keeps the Firebase code', () {
-      final failure = AuthFailure.fromFirebase(
-        FirebaseAuthException(code: 'email-already-in-use'),
+  group('AuthFailure', () {
+    test('carries the provider code and its friendly message', () {
+      final failure = AuthFailure(
+        'email-already-in-use',
+        AuthFailure.messageForCode('email-already-in-use'),
       );
       expect(failure.code, 'email-already-in-use');
       expect(failure.message, 'An account already exists for that email.');
@@ -54,8 +54,9 @@ void main() {
     expect(const AuthFailure.cancelled().isCancelled, isTrue);
     expect(const AuthFailure.unknown().isCancelled, isFalse);
     expect(
-      AuthFailure.fromFirebase(
-        FirebaseAuthException(code: 'requires-recent-login'),
+      AuthFailure(
+        'requires-recent-login',
+        AuthFailure.messageForCode('requires-recent-login'),
       ).requiresRecentLogin,
       isTrue,
     );

@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
 /// A user-presentable authentication error.
@@ -8,10 +7,6 @@ import 'package:flutter/foundation.dart';
 @immutable
 class AuthFailure implements Exception {
   const AuthFailure(this.code, this.message);
-
-  /// Maps a [FirebaseAuthException] to a friendly message.
-  factory AuthFailure.fromFirebase(FirebaseAuthException e) =>
-      AuthFailure(e.code, messageForCode(e.code));
 
   /// The user dismissed a sign-in sheet. The UI should stay silent.
   const AuthFailure.cancelled() : this(cancelledCode, 'Sign-in was cancelled.');
