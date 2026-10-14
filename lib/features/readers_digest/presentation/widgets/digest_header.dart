@@ -9,6 +9,10 @@ import 'package:mfb_think_tank/features/readers_digest/presentation/digest_color
 class DigestHeader extends ConsumerWidget {
   const DigestHeader({super.key});
 
+  static const _barHeight = 64.0;
+  static const _iconSize = 30.0;
+  static const _avatarSize = 44.0;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
@@ -21,26 +25,38 @@ class DigestHeader extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              const Expanded(child: _BrandLockup()),
-              IconButton(
-                key: const Key('open-feedback'),
-                tooltip: 'Send feedback',
-                icon: const Icon(Icons.feedback_outlined),
-                onPressed: () => showFeedbackSheet(context),
-              ),
-              IconButton(
-                key: const Key('open-account'),
-                tooltip: 'Account',
-                icon: CircleAvatar(
-                  radius: 16,
-                  backgroundColor: colors.raised,
-                  child: Text(initial),
+          // Taller than a default toolbar so the buttons sit at the same
+          // scale as the 44dp wordmark.
+          SizedBox(
+            height: _barHeight,
+            child: Row(
+              children: [
+                const Expanded(child: _BrandLockup()),
+                IconButton(
+                  key: const Key('open-feedback'),
+                  tooltip: 'Send feedback',
+                  iconSize: _iconSize,
+                  icon: const Icon(Icons.feedback_outlined),
+                  onPressed: () => showFeedbackSheet(context),
                 ),
-                onPressed: () => showAccountSheet(context),
-              ),
-            ],
+                IconButton(
+                  key: const Key('open-account'),
+                  tooltip: 'Account',
+                  iconSize: _avatarSize,
+                  icon: CircleAvatar(
+                    radius: _avatarSize / 2,
+                    backgroundColor: colors.raised,
+                    child: Text(
+                      initial,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  onPressed: () => showAccountSheet(context),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 8),
           Text(
