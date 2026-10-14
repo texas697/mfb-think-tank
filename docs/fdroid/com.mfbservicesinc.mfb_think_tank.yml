@@ -85,7 +85,7 @@ Builds:
       - $$flutter$$/bin/flutter build apk --release
 
 AutoUpdateMode: Version
-UpdateCheckMode: Tags
+UpdateCheckMode: Tags ^foss-v[0-9.]+$
 UpdateCheckData: pubspec.yaml|version:\s.+\+(\d+)|.|version:\s([0-9.]+)
 CurrentVersion: 0.2.2
 CurrentVersionCode: 1
