@@ -2,7 +2,7 @@ import 'package:material_ui/material_ui.dart';
 
 /// App-wide Material 3 themes. Change [seedColor] to rebrand.
 abstract final class AppTheme {
-  static const seedColor = Color(0xFF3F51B5);
+  static const seedColor = Color(0xFF8A94A8);
 
   static ThemeData get light => _build(Brightness.light);
   static ThemeData get dark => _build(Brightness.dark);

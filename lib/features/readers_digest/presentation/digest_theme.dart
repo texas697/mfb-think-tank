@@ -6,11 +6,16 @@ abstract final class DigestTheme {
   static const _colors = DigestColors();
 
   static ThemeData get data {
-    final scheme = ColorScheme.fromSeed(
-      seedColor: _colors.accent,
-      brightness: Brightness.dark,
-      surface: _colors.card,
-    ).copyWith(primary: _colors.accent, error: _colors.danger);
+    final scheme =
+        ColorScheme.fromSeed(
+          seedColor: _colors.accent,
+          brightness: Brightness.dark,
+          surface: _colors.card,
+        ).copyWith(
+          primary: _colors.accent,
+          onPrimary: _colors.onAccent,
+          error: _colors.danger,
+        );
     final base = ThemeData(
       colorScheme: scheme,
       scaffoldBackgroundColor: _colors.background,
