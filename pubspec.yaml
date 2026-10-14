@@ -1,7 +1,7 @@
 name: mfb_think_tank
 description: "MFB Think Tank - find the signal in the noise."
 publish_to: 'none'
-version: 0.3.1+1
+version: 0.3.1+2
 
 environment:
   sdk: ^3.13.5
