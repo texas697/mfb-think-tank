@@ -1,6 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
-/// Shown while Firebase restores the previous session.
+/// Shown while the previous session is restored.
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
 

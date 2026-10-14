@@ -3,8 +3,8 @@ import 'dart:convert';
 import 'package:mfb_think_tank/core/network/api_client.dart';
 import 'package:mfb_think_tank/features/auth/data/auth_failure.dart';
 
-/// Server-side account deletion: wipes the user's data and the Firebase
-/// Auth user in one request, so nothing is left behind after a local delete.
+/// Server-side account deletion: wipes the user's data and account in one
+/// request, so nothing is left behind after a local delete.
 abstract class AccountDeletionGateway {
   /// Deletes the signed-in user's account and all of its data.
   ///

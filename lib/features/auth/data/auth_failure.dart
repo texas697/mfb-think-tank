@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 /// A user-presentable authentication error.
 ///
 /// Every [AuthRepository] method throws only [AuthFailure], so the UI never has
-/// to know about Firebase, Google or Apple exception types.
+/// to know about the auth backend's exception types.
 @immutable
 class AuthFailure implements Exception {
   const AuthFailure(this.code, this.message);
@@ -18,7 +18,7 @@ class AuthFailure implements Exception {
   static const cancelledCode = 'cancelled';
   static const _genericMessage = 'Something went wrong. Please try again.';
 
-  /// Stable error code (Firebase codes are passed through unchanged).
+  /// Stable error code (backend codes are passed through unchanged).
   final String code;
 
   /// Message suitable for showing to the user.
@@ -29,7 +29,7 @@ class AuthFailure implements Exception {
   /// True when the operation needs the user to sign in again first.
   bool get requiresRecentLogin => code == 'requires-recent-login';
 
-  /// User-friendly text for a Firebase Auth error [code].
+  /// User-friendly text for a backend error [code].
   static String messageForCode(String code) => switch (code) {
     'invalid-email' => 'That email address looks invalid.',
     'missing-email' => 'Please enter your email address.',
@@ -44,9 +44,7 @@ class AuthFailure implements Exception {
     'weak-password' => 'Please choose a stronger password.',
     'password-does-not-meet-requirements' =>
       'That password does not meet the requirements.',
-    'operation-not-allowed' =>
-      'This sign-in method is not enabled. '
-          'Enable it in the Firebase console under Authentication.',
+    'operation-not-allowed' => 'This sign-in method is not enabled.',
     'too-many-requests' =>
       'Too many attempts. Please wait a moment and try again.',
     'network-request-failed' =>

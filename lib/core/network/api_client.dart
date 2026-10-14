@@ -32,10 +32,10 @@ class ApiResponse {
 
 /// Authenticated JSON transport for the Crucix API.
 ///
-/// Attaches `Authorization: Bearer <Firebase ID token>` to every request.
+/// Attaches `Authorization: Bearer <token>` to every request.
 /// A 401 triggers exactly one forced token refresh and a single retry; a
 /// second 401 is surfaced as [ApiResponse.statusCode] 401 for the caller
-/// (never treated as a Firebase sign-out).
+/// (never treated as a sign-out).
 class ApiClient {
   ApiClient({required this._http, required this._base, required this._tokens});
 
@@ -107,7 +107,7 @@ class ApiClient {
       queryParameters: (query == null || query.isEmpty) ? null : query,
     );
     try {
-      // Fetched inside the try so an SDK error (for example a Firebase
+      // Fetched inside the try so a token-source error (for example a
       // network failure) surfaces as an ApiException like any other failure.
       final token = await _tokens.getIdToken(forceRefresh: forceRefresh);
       final request = _buildRequest(method, url, token: token, body: body);

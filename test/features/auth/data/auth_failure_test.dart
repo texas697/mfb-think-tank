@@ -38,7 +38,7 @@ void main() {
       );
       expect(
         AuthFailure.messageForCode('operation-not-allowed'),
-        contains('Firebase console'),
+        contains('not enabled'),
       );
     });
 

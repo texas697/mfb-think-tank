@@ -4,24 +4,12 @@ import 'package:mfb_think_tank/core/config/app_config.dart';
 import 'package:mfb_think_tank/features/auth/application/api_client_providers.dart';
 import 'package:mfb_think_tank/features/auth/data/account_deletion_gateway.dart';
 import 'package:mfb_think_tank/features/auth/data/app_user.dart';
-import 'package:mfb_think_tank/features/auth/data/apple_sign_in_gateway.dart';
 import 'package:mfb_think_tank/features/auth/data/auth_repository.dart';
-import 'package:mfb_think_tank/features/auth/data/google_sign_in_gateway.dart';
+import 'package:mfb_think_tank/features/auth/data/backend_auth_repository.dart';
 
 /// The platform the app runs on. Override in tests.
 final targetPlatformProvider = Provider<TargetPlatform>(
   (ref) => defaultTargetPlatform,
-);
-
-final googleSignInGatewayProvider = Provider<GoogleSignInGateway>(
-  (ref) => GoogleSignInPluginGateway(
-    config: ref.watch(appConfigProvider),
-    platform: ref.watch(targetPlatformProvider),
-  ),
-);
-
-final appleSignInGatewayProvider = Provider<AppleSignInGateway>(
-  (ref) => const SignInWithAppleGateway(),
 );
 
 final accountDeletionGatewayProvider = Provider<AccountDeletionGateway>(
@@ -30,13 +18,15 @@ final accountDeletionGatewayProvider = Provider<AccountDeletionGateway>(
   (ref) => HttpAccountDeletionGateway(api: () => ref.read(apiClientProvider)),
 );
 
-final authRepositoryProvider = Provider<AuthRepository>(
-  (ref) => createFirebaseAuthRepository(
-    google: ref.watch(googleSignInGatewayProvider),
-    apple: ref.watch(appleSignInGatewayProvider),
+final authRepositoryProvider = Provider<AuthRepository>((ref) {
+  final config = ref.watch(appConfigProvider);
+  return createBackendAuthRepository(
+    session: ref.watch(backendSessionProvider),
+    http: ref.watch(httpClientProvider),
+    baseUrl: Uri.parse(config.crucixApiBaseUrl),
     deletion: ref.watch(accountDeletionGatewayProvider),
-  ),
-);
+  );
+});
 
 /// Signed-in user, updated on sign-in/out only. Drives routing.
 final authStateChangesProvider = StreamProvider<AppUser?>(
@@ -67,15 +57,12 @@ class SocialSignInOptions {
   final bool showApple;
 }
 
-final socialSignInOptionsProvider = Provider<SocialSignInOptions>((ref) {
-  final platform = ref.watch(targetPlatformProvider);
-  final config = ref.watch(appConfigProvider);
-  final isMobile =
-      !kIsWeb &&
-      (platform == TargetPlatform.android || platform == TargetPlatform.iOS);
-  return SocialSignInOptions(
-    showGoogle: isMobile,
-    googleConfigured: config.isGoogleSignInConfiguredFor(platform),
-    showApple: !kIsWeb && platform == TargetPlatform.iOS,
-  );
-});
+/// The FOSS build drops the Google and Apple SDKs, so neither button shows.
+/// Both options stay off on every platform; the buttons hide themselves.
+final socialSignInOptionsProvider = Provider<SocialSignInOptions>(
+  (ref) => const SocialSignInOptions(
+    showGoogle: false,
+    googleConfigured: false,
+    showApple: false,
+  ),
+);

@@ -3,12 +3,11 @@ import 'package:material_ui/material_ui.dart';
 import 'package:mfb_think_tank/app/router.dart';
 import 'package:mfb_think_tank/app/theme.dart';
 
-/// Display name. Set when the app was created from flutter-firebase-template
-/// (scripts/new_app.sh).
+/// Display name shown in the task switcher.
 const appTitle = 'MFB Think Tank';
 
-/// Root widget. Expects to run inside a [ProviderScope] with Firebase
-/// already initialized.
+/// Root widget. Expects to run inside a [ProviderScope] whose providers are
+/// ready.
 class App extends ConsumerWidget {
   const App({super.key});
 

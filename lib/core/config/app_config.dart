@@ -21,13 +21,10 @@ class AppConfig {
       googleIosClientId = const String.fromEnvironment('GOOGLE_IOS_CLIENT_ID'),
       crucixApiBaseUrl = const String.fromEnvironment('CRUCIX_API_BASE_URL');
 
-  /// The Firebase project's "Web client" OAuth client id.
-  ///
-  /// Required on Android so Google Sign-In returns an ID token that Firebase
-  /// accepts. Optional on iOS.
+  /// The OAuth "Web client" id, used on Android to obtain a Google ID token.
   final String googleServerClientId;
 
-  /// `CLIENT_ID` from `ios/Runner/GoogleService-Info.plist`.
+  /// The iOS OAuth client id.
   final String googleIosClientId;
 
   /// HTTPS origin of the Crucix API (e.g. `https://crucix-....a.run.app`).

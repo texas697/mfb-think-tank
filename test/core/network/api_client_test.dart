@@ -46,7 +46,7 @@ void main() {
       client(StateError('No signed-in user')).get('api/me'),
       throwsKind(ApiFailureKind.unauthorized),
     );
-    // Any SDK exception (for example a Firebase network error) must not
+    // Any token-source exception (for example a network error) must not
     // escape as its own type; repositories only know ApiException.
     await expectLater(
       client(Exception('firebase_auth/network-request-failed')).get('api/me'),

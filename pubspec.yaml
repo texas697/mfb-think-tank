@@ -1,5 +1,5 @@
 name: mfb_think_tank
-description: "MFB Think Tank - Flutter app with Firebase Auth."
+description: "MFB Think Tank - find the signal in the noise."
 publish_to: 'none'
 version: 0.2.2+1
 
@@ -8,24 +8,20 @@ environment:
 
 dependencies:
   crypto: ^3.0.7
-  firebase_auth: ^6.7.0
-  firebase_core: ^4.15.0
   flutter:
     sdk: flutter
   flutter_markdown_plus: ^1.0.12
   flutter_riverpod: ^3.4.3
   flutter_svg: ^2.3.0
   go_router: ^18.0.2
-  google_sign_in: ^7.2.0
   http: ^1.6.0
   material_ui: ^1.6.0
   package_info_plus: ^10.2.2
-  sign_in_with_apple: ^8.2.0
+  shared_preferences: ^2.3.0
   url_launcher: ^6.3.3
 
 dev_dependencies:
   fake_async: ^1.3.3
-  firebase_auth_mocks: ^0.15.2
   flutter_launcher_icons: ^0.14.4
   flutter_lints: ^6.0.0
   flutter_test:

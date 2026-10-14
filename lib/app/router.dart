@@ -47,7 +47,7 @@ String? authRedirect({
 }) {
   final path = uri.path;
 
-  // Auth state not known yet (first event from Firebase pending). Keep the
+  // Auth state not known yet (first auth event pending). Keep the
   // requested location (e.g. a cold-start deep link) in `?from=` so it can be
   // restored once auth resolves.
   if (authState.isLoading && !authState.hasValue) {

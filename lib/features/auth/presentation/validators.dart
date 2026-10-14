@@ -15,8 +15,8 @@ abstract final class Validators {
   static String? requiredPassword(String? value) =>
       (value == null || value.isEmpty) ? 'Enter your password' : null;
 
-  /// Strength check, for creating a password. Keep in sync with the password
-  /// policy in Firebase console > Authentication > Settings, if you set one.
+  /// Strength check, for creating a password. Keep in sync with the backend's
+  /// password policy, if the server enforces one.
   static String? newPassword(String? value) {
     final password = value ?? '';
     if (password.isEmpty) return 'Enter a password';

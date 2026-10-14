@@ -2,8 +2,8 @@ import 'package:flutter/foundation.dart';
 
 /// The signed-in user, as the app needs it.
 ///
-/// A provider-agnostic view of the account so UI code never names a Firebase,
-/// Google or Apple type. Built in `data` from the SDK user.
+/// A provider-agnostic view of the account so UI code never names an
+/// authentication SDK type. Built in `data` from the backend user.
 @immutable
 class AppUser {
   const AppUser({

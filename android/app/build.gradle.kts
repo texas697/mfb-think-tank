@@ -2,12 +2,6 @@ import java.util.Properties
 
 plugins {
     id("com.android.application")
-    // START: FlutterFire Configuration
-    id("com.google.gms.google-services")
-    // END: FlutterFire Configuration
-    // `flutterfire configure` inserts the Google Services plugin directly below
-    // the line above (and registers its version in settings.gradle.kts), so
-    // keep that line exactly as is.
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
@@ -48,8 +42,8 @@ android {
 
     defaultConfig {
         applicationId = "com.mfbservicesinc.mfb_think_tank"
-        // firebase_auth needs API 23+, google_sign_in_android needs API 24+.
-        // Never go below 24, but follow Flutter if its default is ever higher.
+        // Android 7.0+. Never go below 24, but follow Flutter if its default
+        // is ever higher.
         minSdk = maxOf(flutter.minSdkVersion, 24)
         targetSdk = flutter.targetSdkVersion
         // Both come from pubspec.yaml `version:` unless overridden with

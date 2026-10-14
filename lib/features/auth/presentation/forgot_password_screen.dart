@@ -44,7 +44,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
     if (_sent) {
       return AuthScaffold(
         title: 'Check your email',
-        // Firebase email enumeration protection means we cannot tell whether
+        // Email enumeration protection means we cannot tell whether
         // the account exists, so word this neutrally.
         subtitle:
             'If an account exists for ${_email.text.trim()}, you will '

@@ -1,5 +1,5 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_auth_mocks/firebase_auth_mocks.dart';
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -8,8 +8,8 @@ import 'package:mfb_think_tank/app/app.dart';
 import 'package:mfb_think_tank/app/router.dart';
 import 'package:mfb_think_tank/features/auth/application/auth_providers.dart';
 import 'package:mfb_think_tank/features/auth/data/app_user.dart';
-import 'package:mfb_think_tank/features/auth/data/auth_repository.dart';
 import 'package:mfb_think_tank/features/readers_digest/application/digest_api_providers.dart';
+import 'package:mocktail/mocktail.dart';
 
 import '../helpers/fake_digest_repository.dart';
 import '../helpers/mocks.dart';
@@ -122,14 +122,36 @@ void main() {
   });
 
   group('router + auth state', () {
-    late MockFirebaseAuth auth;
+    late MockAuthRepository repository;
+    late StreamController<AppUser?> controller;
+    AppUser? currentUser;
 
-    AuthRepository repositoryWith(FirebaseAuth auth) => FirebaseAuthRepository(
-      auth: auth,
-      google: MockGoogleSignInGateway(),
-      apple: MockAppleSignInGateway(),
-      deletion: MockAccountDeletionGateway(),
-    );
+    Stream<AppUser?> authStates() async* {
+      yield currentUser;
+      yield* controller.stream;
+    }
+
+    setUp(() {
+      controller = StreamController<AppUser?>.broadcast();
+      currentUser = null;
+      repository = MockAuthRepository();
+      when(() => repository.currentUser).thenAnswer((_) => currentUser);
+      when(
+        () => repository.signInWithEmail(
+          email: any(named: 'email'),
+          password: any(named: 'password'),
+        ),
+      ).thenAnswer((_) async {
+        currentUser = fakeAppUser();
+        controller.add(currentUser);
+      });
+      when(() => repository.signOut()).thenAnswer((_) async {
+        currentUser = null;
+        controller.add(null);
+      });
+    });
+
+    tearDown(() => controller.close());
 
     Future<ProviderContainer> pumpApp(WidgetTester tester) async {
       tester.view.physicalSize = const Size(1080, 2400);
@@ -139,7 +161,9 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            authRepositoryProvider.overrideWithValue(repositoryWith(auth)),
+            authRepositoryProvider.overrideWithValue(repository),
+            authStateChangesProvider.overrideWith((ref) => authStates()),
+            currentUserProvider.overrideWith((ref) => authStates()),
             digestRepositoryProvider.overrideWithValue(FakeDigestRepository()),
           ],
           child: const App(),
@@ -159,9 +183,7 @@ void main() {
     testWidgets('signed-out users land on sign-in, then home after sign-in', (
       tester,
     ) async {
-      auth = MockFirebaseAuth(
-        mockUser: MockUser(uid: 'u1', email: 'ann@example.com'),
-      );
+      currentUser = null;
       final container = await pumpApp(tester);
       expect(location(container), AppRoutes.signIn);
       expect(find.text('Sign in to continue'), findsOneWidget);
@@ -182,10 +204,7 @@ void main() {
     });
 
     testWidgets('signing out from profile returns to sign-in', (tester) async {
-      auth = MockFirebaseAuth(
-        signedIn: true,
-        mockUser: MockUser(uid: 'u1', email: 'ann@example.com'),
-      );
+      currentUser = fakeAppUser();
       final container = await pumpApp(tester);
       expect(location(container), AppRoutes.home);
 
@@ -203,16 +222,14 @@ void main() {
     testWidgets('a signed-out deep link is restored after sign-in', (
       tester,
     ) async {
-      auth = MockFirebaseAuth(
-        mockUser: MockUser(uid: 'u1', email: 'a@b.co'),
-      );
+      currentUser = null;
       final container = await pumpApp(tester);
 
       container.read(routerProvider).go(AppRoutes.profile);
       await tester.pumpAndSettle();
       expect(location(container), '${AppRoutes.signIn}?from=%2Fprofile');
 
-      await auth.signInWithEmailAndPassword(email: 'a@b.co', password: 'x');
+      await repository.signInWithEmail(email: 'a@b.co', password: 'x');
       await tester.pumpAndSettle();
       expect(location(container), AppRoutes.profile);
       expect(GoRouter.of(tester.element(find.text('Profile'))), isNotNull);
