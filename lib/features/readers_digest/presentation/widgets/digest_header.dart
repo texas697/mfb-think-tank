@@ -25,9 +25,11 @@ class DigestHeader extends ConsumerWidget {
       children: [
         // Taller than a default toolbar so the buttons sit at the same scale
         // as the 44dp wordmark.
+        // The wordmark's swoosh already indents the letters, so the bar
+        // sits closer to the edge than the content below it.
         Container(
           height: _barHeight,
-          padding: const EdgeInsets.fromLTRB(16, 0, 8, 0),
+          padding: const EdgeInsets.fromLTRB(4, 0, 8, 0),
           decoration: BoxDecoration(
             border: Border(bottom: BorderSide(color: colors.border)),
           ),
