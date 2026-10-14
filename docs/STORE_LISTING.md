@@ -38,8 +38,10 @@ Short description (80 max):
 Full description: see `scripts/play_spec.json` (kept out of the repo; the
 text is the App Store description below with the ★ section headers).
 
-Graphics: icon 512×512, feature graphic 1024×500, five 1080×1920 phone
-screenshots. Source files live in the Play Console once uploaded.
+Graphics: icon 512×512 (`docs/store-assets/play-icon-512.png`), feature
+graphic 1024×500 (`docs/store-assets/play-feature-graphic-1024x500.png`),
+five 1080×1920 phone screenshots. Screenshot sources live in the Play Console
+once uploaded.
 
 Console-only settings (the API cannot set these):
 
@@ -71,7 +73,8 @@ Console-only settings (the API cannot set these):
 | App privacy | Published 2026-10-13: email address, user ID, other user content (ratings, deep dives) and crash data (in-app error reports), all linked to the user, no tracking; policy URL https://mfbintelligence.com/privacy |
 | Export compliance | Uses only standard HTTPS encryption (exempt) |
 | Screenshots | 6.3" (1206×2622), iPhone Duo and iPad 13" sets of the five MFB-branded mockups (01-feed … 05-your-key) in the Asset Library |
-| Header asset | `docs/store-assets/asc-header-5244x2950.png`, rendered from `asc-header.html` at 2622×1475 CSS px, DPR 2; MFB Think Tank branding |
+| App icon | `docs/store-assets/asc-icon-1024.png` (square, no alpha; Apple applies the corners) |
+| Header asset | `docs/store-assets/asc-header-5244x2950.png`, rendered from `asc-header.html` at 2622×1475 CSS px, DPR 2. The PNG still shows the old crosshair tile; re-render after dropping the phone screenshots (`p1_phone.png`, `p2_phone.png`, kept out of the repo) next to the HTML |
 
 Description:
 
