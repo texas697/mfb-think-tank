@@ -70,7 +70,8 @@ Console-only settings (the API cannot set these):
 | Account deletion | In app: Profile, Delete account (guideline 5.1.1(v)) |
 | App privacy | Published 2026-10-13: email address, user ID, other user content (ratings, deep dives) and crash data (in-app error reports), all linked to the user, no tracking; policy URL https://mfbintelligence.com/privacy |
 | Export compliance | Uses only standard HTTPS encryption (exempt) |
-| Screenshots | 6.9" (1320×2868) and 6.5" (1284×2778) iPhone sets; produce from the TestFlight build |
+| Screenshots | 6.3" (1206×2622), iPhone Duo and iPad 13" sets of the five MFB-branded mockups (01-feed … 05-your-key) in the Asset Library |
+| Header asset | `docs/store-assets/asc-header-5244x2950.png`, rendered from `asc-header.html` at 2622×1475 CSS px, DPR 2; MFB Think Tank branding |
 
 Description:
 
@@ -106,7 +107,9 @@ Description:
 Version 0.2.2 with build 4 attached, description, promo text, keywords,
 review sign-in and notes, subtitle, category News, content rights (third
 party, licensed), age rating 13+, app privacy published, price free in 175
-countries. Not yet submitted: press Add for Review on the version page
+countries. Product page header replaced 2026-10-13 with the MFB Think
+Tank version; the old "Crucix Digest" header was deleted from the Asset
+Library. Not yet submitted: press Add for Review on the version page
 after TestFlight checks of Google and Apple sign-in on build 4.
 
 ## Play status (2026-10-13)
