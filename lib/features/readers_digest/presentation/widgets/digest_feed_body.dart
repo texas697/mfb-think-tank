@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:mfb_think_tank/features/readers_digest/application/digest_feed_provider.dart';
+import 'package:mfb_think_tank/features/readers_digest/application/digest_feed_retry_provider.dart';
 import 'package:mfb_think_tank/features/readers_digest/data/digest_failure.dart';
 import 'package:mfb_think_tank/features/readers_digest/data/digest_feed.dart';
 import 'package:mfb_think_tank/features/readers_digest/data/digest_query.dart';
@@ -29,12 +30,13 @@ class DigestFeedBody extends ConsumerWidget {
     final feed = ref.watch(digestFeedProvider);
     final data = feed.value;
     final retry = ref.read(digestFeedProvider.notifier).refresh;
+    final retryDelay = ref.watch(digestFeedRetryProvider);
     if (data == null) {
       return SliverToBoxAdapter(
         child: feed.hasError
             ? FeedMessage(
                 title: 'Could not load the library',
-                body: _message(feed.error),
+                body: _message(feed.error, retryDelay),
                 actionLabel: 'Retry',
                 onAction: retry,
               )
@@ -61,7 +63,7 @@ class DigestFeedBody extends ConsumerWidget {
           SliverToBoxAdapter(
             child: FeedMessage(
               title: 'Could not refresh',
-              body: _message(feed.error),
+              body: _message(feed.error, retryDelay),
               actionLabel: 'Retry',
               onAction: retry,
             ),
@@ -107,7 +109,11 @@ class DigestFeedBody extends ConsumerWidget {
   String _label(DigestFeed feed) =>
       feed.isRankedByAffinity ? 'Top pick for you' : 'Latest';
 
-  String _message(Object? error) => error is DigestFailure
-      ? error.message
-      : 'Something went wrong. Try again.';
+  String _message(Object? error, Duration? retryDelay) {
+    final message = error is DigestFailure
+        ? error.message
+        : 'Something went wrong. Try again.';
+    if (retryDelay == null) return message;
+    return '$message Retrying in ${retryDelay.inSeconds} s.';
+  }
 }
