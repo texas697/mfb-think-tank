@@ -6,8 +6,13 @@
 #   ci               PRs into main only: analyze + test (no signing). Merges to main
 #                    do not rebuild; the PR build already tested the same code.
 #   android-release  tag v*: signed AAB, uploaded to Google Play (internal track, draft)
+#   android-release-foss  tag foss-v*: signed APKs from `foss`, archived to Drive
 #   ios-release      tag v*: signed IPA, uploaded to TestFlight
 #   release-all      manual only: both stores from one macOS build
+#
+# Release APKs are also archived to Google Drive under
+# "MFB Think Tank APKs/<version>/<main|foss>/" by android-release and
+# android-release-foss.
 #
 # One-time setup in the Codemagic UI (sidebar "Settings" on a personal account,
 # "Team settings" on a team; the app must use YAML configuration, not the
@@ -26,6 +31,11 @@
 #      - group `google_play`:
 #          GCLOUD_SERVICE_ACCOUNT_CREDENTIALS  (secret) Play Console service
 #                                              account JSON key, pasted as-is
+#      - group `gdrive` (APK archive to Drive; see scripts/export_gdrive_secret.sh):
+#          GDRIVE_TOKEN           (secret) rclone OAuth token JSON for the
+#                                 personal Drive account
+#          GDRIVE_CLIENT_ID       (optional) your own OAuth client id
+#          GDRIVE_CLIENT_SECRET   (optional) that client's secret
 #      - group `app_store_signing`:
 #          CERTIFICATE_PRIVATE_KEY             (secret) RSA private key used to
 #              create/reuse your Apple Distribution certificate. Generate once
@@ -83,6 +93,12 @@ definitions:
   artifacts:
     android: &android_artifacts
       - build/**/outputs/**/*.aab
+      - build/**/outputs/**/mapping.txt
+      - flutter_drive.log
+    # Same set plus the APKs the Drive upload archives.
+    android_release: &android_release_artifacts
+      - build/**/outputs/**/*.aab
+      - build/**/outputs/**/*.apk
       - build/**/outputs/**/mapping.txt
       - flutter_drive.log
     ios: &ios_artifacts
@@ -179,6 +195,49 @@ definitions:
         flutter build appbundle --release \
           --build-number="$BUILD_NUMBER" \
           --dart-define-from-file=config/app_config.json
+
+    - &build_apks
+      name: Build release APKs
+      script: |
+        set -euo pipefail
+        # A universal APK plus the per-ABI splits, so the Drive archive has the
+        # same variants the F-Droid build and a sideload would use.
+        flutter build apk --release \
+          --dart-define-from-file=config/app_config.json
+        flutter build apk --release --split-per-abi \
+          --dart-define-from-file=config/app_config.json
+
+    - &upload_apks_drive
+      name: Upload APKs to Google Drive
+      script: |
+        # Archives every release APK under "MFB Think Tank APKs/<version>/<channel>".
+        # Uses the personal Drive via an OAuth rclone token: a Google service
+        # account has its own zero-quota drive and cannot write to a personal
+        # My Drive folder. Credentials come from the `gdrive` variable group.
+        set -euo pipefail
+        for v in GDRIVE_TOKEN; do
+          if [ -z "${!v:-}" ]; then
+            echo "No Drive credentials: $v is unset. Add the 'gdrive' variable group in Codemagic."
+            exit 1
+          fi
+        done
+        command -v rclone >/dev/null 2>&1 || curl -fsSL https://rclone.org/install.sh | sudo bash
+        export RCLONE_CONFIG_GDRIVE_TYPE=drive
+        export RCLONE_CONFIG_GDRIVE_SCOPE=drive
+        export RCLONE_CONFIG_GDRIVE_TOKEN="$GDRIVE_TOKEN"
+        if [ -n "${GDRIVE_CLIENT_ID:-}" ]; then
+          export RCLONE_CONFIG_GDRIVE_CLIENT_ID="$GDRIVE_CLIENT_ID"
+        fi
+        if [ -n "${GDRIVE_CLIENT_SECRET:-}" ]; then
+          export RCLONE_CONFIG_GDRIVE_CLIENT_SECRET="$GDRIVE_CLIENT_SECRET"
+        fi
+        VERSION=$(sed -n 's/^version:[[:space:]]*\([^+[:space:]]*\).*/\1/p' pubspec.yaml)
+        DEST="gdrive:MFB Think Tank APKs/${VERSION}/${APK_CHANNEL:?set APK_CHANNEL for this workflow}"
+        echo "Uploading APKs to $DEST"
+        rclone copy build/app/outputs/flutter-apk/ "$DEST/" \
+          --include "*-release.apk*" \
+          --transfers 4
+        rclone ls "$DEST"
 
     - &ios_code_signing
       name: Set up iOS code signing
@@ -293,8 +352,10 @@ workflows:
       groups:
         - android_signing
         - google_play
+        - gdrive
       vars:
         PACKAGE_NAME: *package_name
+        APK_CHANNEL: main
     cache: *android_cache
     triggering: *release_tag_trigger
     scripts:
@@ -304,9 +365,48 @@ workflows:
       - *check_android_keystore
       - *pub_get
       - *build_aab
-    artifacts: *android_artifacts
+      - *build_apks
+      - *upload_apks_drive
+    artifacts: *android_release_artifacts
     publishing:
       google_play: *google_play_publishing
+
+  # ---------------------------------------------------------------------------
+  # The free-software branch. F-Droid builds and ships this one from `foss`;
+  # this workflow only archives its APKs to Drive on a `foss-v*` tag.
+  android-release-foss:
+    name: Android release (F-Droid / foss APK archive)
+    instance_type: linux_x2 # needs billing; use mac_mini_m2 on the free plan
+    max_build_duration: 60
+    environment:
+      flutter: stable
+      groups:
+        - android_signing
+        - gdrive
+      vars:
+        APK_CHANNEL: foss
+    cache: *android_cache
+    triggering:
+      events:
+        - tag
+      tag_patterns:
+        - pattern: "foss-v*"
+          include: true
+    scripts:
+      - name: Check tag matches pubspec version
+        script: |
+          # F-Droid tags are `foss-vX.Y.Z`; the pubspec carries `X.Y.Z`.
+          set -euo pipefail
+          PUBSPEC_VERSION=$(sed -n 's/^version:[[:space:]]*\([^+[:space:]]*\).*/\1/p' pubspec.yaml)
+          if [ -n "${CM_TAG:-}" ] && [ "$CM_TAG" != "foss-v$PUBSPEC_VERSION" ]; then
+            echo "ERROR: tag $CM_TAG does not match pubspec version $PUBSPEC_VERSION"
+            exit 1
+          fi
+      - *check_android_keystore
+      - *pub_get
+      - *build_apks
+      - *upload_apks_drive
+    artifacts: *android_release_artifacts
 
   # ---------------------------------------------------------------------------
   ios-release:
