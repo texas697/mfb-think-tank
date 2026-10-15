@@ -1,7 +1,7 @@
 name: mfb_think_tank
 description: "MFB Think Tank - Flutter app with Firebase Auth."
 publish_to: 'none'
-version: 0.4.0+1
+version: 0.4.1+1
 
 environment:
   sdk: ^3.13.5
