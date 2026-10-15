@@ -34,7 +34,8 @@ commit on `foss`.
    sign-in until they are deployed.
 4. **Fastlane metadata** — `fastlane/metadata/android/en-US/` (title, short and
    full description, changelogs, icon). Done.
-5. **Tagged `foss` releases** — every F-Droid version is an exact commit.
+5. **Tagged `foss` releases** — every F-Droid version is an exact commit, and
+   carries a build number higher than the previous one (see below).
 
 ## Phase 1 — decouple Firebase from the UI (on `main`)
 
@@ -83,14 +84,46 @@ from `main` is intentionally small (~15 files):
 At each release:
 
 ```bash
-git checkout foss && git merge main      # resolve only the auth data/ delta
-git tag vX.Y.Z-foss && git push origin foss vX.Y.Z-foss
+git checkout foss && git merge main          # resolve the auth data/ and pubspec delta
+# bump the build number on foss (see "Build numbers on foss"), then:
+git tag foss-vX.Y.Z && git push origin foss foss-vX.Y.Z
 ```
 
 Conflicts should only ever appear in `lib/features/auth/data/`,
-`lib/features/auth/application/auth_providers.dart` and `pubspec.yaml`. If a
-conflict shows up elsewhere, the Phase 1 seam has been broken — fix it on
-`main`.
+`lib/features/auth/application/auth_providers.dart` and `pubspec.yaml` (the
+build number). If a conflict shows up elsewhere, the Phase 1 seam has been
+broken — fix it on `main`.
+
+`.flutter-version`, `fastlane/metadata/android/`, `docs/FDROID.md` and the
+`docs/fdroid/` metadata template are kept identical on both branches. They
+exist for the F-Droid build, but `main` carries them too, so a release merge
+never surfaces them and F-Droid always builds the recipe it was reviewed
+against. If one of them conflicts, the branches have drifted — reconcile it on
+`main`, then re-merge.
+
+### Build numbers on `foss`
+
+Play and App Store builds get a monotonic `versionCode` from Codemagic's
+`--build-number`. F-Droid has no such override — its metadata reads the code
+straight out of `pubspec.yaml` (`UpdateCheckData: ...\+(\d+)`, `%c`). So
+**every F-Droid release must carry a `+N` higher than the last**. `main` always
+ships `+1`, which Codemagic replaces at build time; on `foss` the number is real
+and must be incremented once per release (`0.3.1+2`, then `0.4.0+3`, …). Two
+releases with the same code look identical to F-Droid, and the newer one is
+never offered as an update.
+
+The metadata ships one `Builds` entry per ABI, with
+`VercodeOperation: %c * 10 + N` turning the pubspec build number into the three
+codes (`+2` → `21`, `22`, `23` for armeabi-v7a, arm64-v8a and x86_64). Add a
+matching `fastlane/metadata/android/en-US/changelogs/<versionCode>.txt` for
+each, or the release notes come out empty.
+
+### Pinning Flutter
+
+F-Droid's builder needs the Flutter version recorded **in this repo**, not just
+in the fdroiddata metadata. `.flutter-version` (currently `3.47.7`) is the
+source of truth; the fdroiddata `prebuild` reads it and checks the `flutter`
+srclib out to that tag. Bump it here when moving Flutter versions.
 
 ### Verify the FOSS APK is clean
 
