@@ -76,8 +76,10 @@ from `main` is intentionally small (~15 files):
 - `android/app/build.gradle.kts` + `android/settings.gradle.kts` — drop the
   `com.google.gms.google-services` plugin; delete
   `android/app/google-services.json`.
-- `codemagic.yaml` — exclude the `foss` branch from the Firebase check steps
-  (Codemagic must not build `foss`; F-Droid builds it).
+- `codemagic.yaml` — exclude the `foss` branch from the Firebase check steps.
+  F-Droid builds and ships the real `foss` release; the `android-release-foss`
+  workflow only rebuilds its APKs on a `foss-v*` tag to archive them to Google
+  Drive, and publishes to no store.
 
 ### Keeping it in sync
 
