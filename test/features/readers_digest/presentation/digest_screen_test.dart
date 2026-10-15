@@ -61,6 +61,8 @@ void main() {
     final container = ProviderScope.containerOf(
       tester.element(find.byType(App)),
     );
+    container.read(routerProvider).go(AppRoutes.home);
+    await tester.pumpAndSettle();
     return container;
   }
 
