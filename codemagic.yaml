@@ -458,9 +458,11 @@ workflows:
         - android_signing
         - google_play
         - app_store_signing
+        - gdrive
       vars:
         PACKAGE_NAME: *package_name
         BUNDLE_ID: *bundle_id
+        APK_CHANNEL: main
         # APP_STORE_APPLE_ID: 1234567890 # optional, see ios-release
     cache:
       cache_paths:
@@ -475,10 +477,13 @@ workflows:
       - *check_android_keystore
       - *pub_get
       - *build_aab
+      - *build_apks
+      - *upload_apks_drive
       - *ios_code_signing
       - *build_ipa
     artifacts:
       - build/**/outputs/**/*.aab
+      - build/**/outputs/**/*.apk
       - build/**/outputs/**/mapping.txt
       - build/ios/ipa/*.ipa
       - build/ios/archive/Runner.xcarchive/dSYMs/*.dSYM
