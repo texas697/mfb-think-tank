@@ -1,55 +1,48 @@
-import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:mfb_think_tank/core/network/api_bytes_response.dart';
+import 'package:mfb_think_tank/core/network/api_response.dart';
+import 'package:mfb_think_tank/core/network/api_transport.dart';
 import 'package:mfb_think_tank/core/network/id_token_provider.dart';
 
-/// Why a low-level API call failed, before feature-level mapping.
-enum ApiFailureKind { network, timeout, unauthorized, http, malformed }
+export 'api_exception.dart';
+export 'api_response.dart';
 
-/// Transport-level failure. Feature repositories map this to their own
-/// failure types; UI never sees it.
-class ApiException implements Exception {
-  const ApiException(this.kind, {this.statusCode, this.body});
-
-  final ApiFailureKind kind;
-  final int? statusCode;
-  final String? body;
-
-  @override
-  String toString() => 'ApiException(${kind.name}, $statusCode)';
-}
-
-/// A decoded HTTP response body with its status code.
-class ApiResponse {
-  const ApiResponse({required this.statusCode, required this.body});
-
-  final int statusCode;
-  final String body;
-
-  bool get isSuccess => statusCode >= 200 && statusCode < 300;
-}
-
-/// Authenticated JSON transport for the Crucix API.
-///
-/// Attaches `Authorization: Bearer <Firebase ID token>` to every request.
-/// A 401 triggers exactly one forced token refresh and a single retry; a
-/// second 401 is surfaced as [ApiResponse.statusCode] 401 for the caller
-/// (never treated as a Firebase sign-out).
+/// Authenticated JSON and bounded binary transport with one 401 refresh.
 class ApiClient {
-  ApiClient({required this._http, required this._base, required this._tokens});
-
-  static const _defaultTimeout = Duration(seconds: 15);
-
-  final http.Client _http;
-  final Uri _base;
-  final IdTokenProvider _tokens;
+  ApiClient({
+    required http.Client http,
+    required Uri base,
+    required IdTokenProvider tokens,
+  }) : _transport = ApiTransport(http: http, base: base, tokens: tokens);
+  final ApiTransport _transport;
 
   Future<ApiResponse> get(
     String path, {
     Map<String, String>? query,
-    Duration timeout = _defaultTimeout,
+    Duration timeout = const Duration(seconds: 15),
   }) => _send('GET', path, query: query, timeout: timeout);
+
+  Future<ApiBytesResponse> getBytes(
+    String path, {
+    Map<String, String>? query,
+    int maxBytes = 12 * 1024 * 1024,
+    Duration timeout = const Duration(seconds: 30),
+  }) async {
+    final response = await _transport.send(
+      'GET',
+      path,
+      query: query,
+      timeout: timeout,
+      maxBytes: maxBytes,
+    );
+    return ApiBytesResponse(
+      statusCode: response.statusCode,
+      bytes: response.bodyBytes,
+      contentType: response.headers['content-type'] ?? '',
+    );
+  }
 
   Future<ApiResponse> post(
     String path, {
@@ -71,77 +64,21 @@ class ApiClient {
   Future<ApiResponse> _send(
     String method,
     String path, {
-    Map<String, String>? query,
     Object? body,
+    Map<String, String>? query,
     required Duration timeout,
   }) async {
-    final response = await _attempt(
+    final response = await _transport.send(
       method,
       path,
       query: query,
       body: body,
       timeout: timeout,
-      forceRefresh: false,
+      maxBytes: 16 * 1024 * 1024,
     );
-    if (response.statusCode != 401) return response;
-    return _attempt(
-      method,
-      path,
-      query: query,
-      body: body,
-      timeout: timeout,
-      forceRefresh: true,
+    return ApiResponse(
+      statusCode: response.statusCode,
+      body: utf8.decode(response.bodyBytes, allowMalformed: true),
     );
-  }
-
-  Future<ApiResponse> _attempt(
-    String method,
-    String path, {
-    Map<String, String>? query,
-    Object? body,
-    required Duration timeout,
-    required bool forceRefresh,
-  }) async {
-    final url = _base.replace(
-      path: '${_base.path}${_base.path.endsWith('/') ? '' : '/'}$path',
-      queryParameters: (query == null || query.isEmpty) ? null : query,
-    );
-    try {
-      // Fetched inside the try so an SDK error (for example a Firebase
-      // network failure) surfaces as an ApiException like any other failure.
-      final token = await _tokens.getIdToken(forceRefresh: forceRefresh);
-      final request = _buildRequest(method, url, token: token, body: body);
-      final streamed = await _http.send(request).timeout(timeout);
-      final response = await http.Response.fromStream(streamed);
-      return ApiResponse(statusCode: response.statusCode, body: response.body);
-    } on TimeoutException {
-      throw const ApiException(ApiFailureKind.timeout);
-    } on http.ClientException catch (e) {
-      throw ApiException(ApiFailureKind.network, body: e.message);
-    } on ApiException {
-      rethrow;
-    } on StateError catch (e) {
-      throw ApiException(ApiFailureKind.unauthorized, body: e.message);
-    } catch (_) {
-      throw const ApiException(ApiFailureKind.network);
-    }
-  }
-
-  http.Request _buildRequest(
-    String method,
-    Uri url, {
-    required String token,
-    required Object? body,
-  }) {
-    final request = http.Request(method, url)
-      ..headers.addAll({
-        'Authorization': 'Bearer $token',
-        'Accept': 'application/json',
-      });
-    if (body != null) {
-      request.headers['Content-Type'] = 'application/json';
-      request.body = body is String ? body : jsonEncode(body);
-    }
-    return request;
   }
 }

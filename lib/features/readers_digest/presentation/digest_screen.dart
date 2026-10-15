@@ -66,7 +66,11 @@ class _DigestScreenState extends ConsumerState<DigestScreen> {
   void _go(DigestQuery next, {bool replace = false}) {
     if (!mounted) return;
     // A debounced replace must not swap out a reader pushed over this screen.
-    if (replace && !(ModalRoute.of(context)?.isCurrent ?? true)) return;
+    if (replace &&
+        (!(ModalRoute.of(context)?.isCurrent ?? true) ||
+            GoRouter.of(context).state.uri.path != AppRoutes.home)) {
+      return;
+    }
     final params = {
       if (next.filter != DigestQuery.filterAll) 'filter': next.filter,
       if (next.hasTopic) 'topic': next.topic,

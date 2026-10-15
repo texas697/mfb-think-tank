@@ -1,5 +1,14 @@
 # MFB Think Tank
 
+The signed-in app provides Dashboard, Reader’s Digest, Live Media, and read-only
+Telegram destinations. The complete Crucix Dashboard runs inside the system
+browser with the app’s existing sign-in; the reader, broadcaster controls,
+Telegram directory and messages use native Flutter screens.
+
+See [the feature parity plan](docs/MOBILE_FEATURE_PARITY_PLAN.md) and
+[validation guide](docs/MOBILE_FEATURE_PARITY_VALIDATION.md) for scope, contracts,
+test commands, and platform checks.
+
 Flutter app for Android and iOS with Firebase Authentication (email/password, Google,
 Sign in with Apple), Riverpod, go_router and Codemagic CI/CD. Developed on Linux or
 Windows; iOS is built and signed on Codemagic's cloud Macs, so no Mac is needed.

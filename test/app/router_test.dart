@@ -32,7 +32,7 @@ void main() {
     );
 
     test('shows the splash screen until auth state is known', () {
-      expect(redirect(loading, AppRoutes.home), AppRoutes.splash);
+      expect(redirect(loading, AppRoutes.dashboard), AppRoutes.splash);
       expect(redirect(loading, AppRoutes.signIn), AppRoutes.splash);
       expect(redirect(loading, AppRoutes.splash), isNull);
     });
@@ -65,7 +65,7 @@ void main() {
 
     test('sends signed-out users to sign-in', () {
       expect(redirect(signedOut, AppRoutes.splash), AppRoutes.signIn);
-      expect(redirect(signedOut, AppRoutes.home), AppRoutes.signIn);
+      expect(redirect(signedOut, AppRoutes.dashboard), AppRoutes.signIn);
     });
 
     test('lets signed-out users use the auth screens', () {
@@ -86,10 +86,10 @@ void main() {
     });
 
     test('sends signed-in users away from auth screens', () {
-      expect(redirect(signedIn, AppRoutes.splash), AppRoutes.home);
-      expect(redirect(signedIn, AppRoutes.signIn), AppRoutes.home);
-      expect(redirect(signedIn, AppRoutes.signUp), AppRoutes.home);
-      expect(redirect(signedIn, AppRoutes.forgotPassword), AppRoutes.home);
+      expect(redirect(signedIn, AppRoutes.splash), AppRoutes.dashboard);
+      expect(redirect(signedIn, AppRoutes.signIn), AppRoutes.dashboard);
+      expect(redirect(signedIn, AppRoutes.signUp), AppRoutes.dashboard);
+      expect(redirect(signedIn, AppRoutes.forgotPassword), AppRoutes.dashboard);
     });
 
     test('restores the remembered location after sign-in', () {
@@ -99,14 +99,28 @@ void main() {
       );
     });
 
+    test('preserves destination queries while Dashboard is the default', () {
+      for (final destination in [
+        '/?filter=news&q=policy',
+        '/dashboard?region=europe',
+      ]) {
+        final loadingLocation = redirect(loading, destination)!;
+        expect(Uri.parse(loadingLocation).queryParameters['from'], destination);
+        final signInLocation = redirect(signedOut, loadingLocation)!;
+        expect(redirect(signedIn, signInLocation), destination);
+      }
+      expect(redirect(signedIn, AppRoutes.home), isNull);
+      expect(redirect(signedIn, AppRoutes.dashboard), isNull);
+    });
+
     test('ignores unsafe "from" values', () {
       expect(
         redirect(signedIn, '${AppRoutes.signIn}?from=https://evil.example'),
-        AppRoutes.home,
+        AppRoutes.dashboard,
       );
       expect(
         redirect(signedIn, '${AppRoutes.signIn}?from=//evil.example'),
-        AppRoutes.home,
+        AppRoutes.dashboard,
       );
     });
 
@@ -117,7 +131,7 @@ void main() {
 
     test('treats an auth error as signed out', () {
       final error = AsyncError<AppUser?>(Exception('x'), StackTrace.empty);
-      expect(redirect(error, AppRoutes.home), AppRoutes.signIn);
+      expect(redirect(error, AppRoutes.dashboard), AppRoutes.signIn);
     });
   });
 
@@ -156,30 +170,31 @@ void main() {
         .uri
         .toString();
 
-    testWidgets('signed-out users land on sign-in, then home after sign-in', (
-      tester,
-    ) async {
-      auth = MockFirebaseAuth(
-        mockUser: MockUser(uid: 'u1', email: 'ann@example.com'),
-      );
-      final container = await pumpApp(tester);
-      expect(location(container), AppRoutes.signIn);
-      expect(find.text('Sign in to continue'), findsOneWidget);
+    testWidgets(
+      'signed-out users land on sign-in, then Dashboard after sign-in',
+      (tester) async {
+        auth = MockFirebaseAuth(
+          mockUser: MockUser(uid: 'u1', email: 'ann@example.com'),
+        );
+        final container = await pumpApp(tester);
+        expect(location(container), AppRoutes.signIn);
+        expect(find.text('Sign in to continue'), findsOneWidget);
 
-      await tester.enterText(
-        find.byKey(const Key('sign-in-email')),
-        'ann@example.com',
-      );
-      await tester.enterText(
-        find.byKey(const Key('sign-in-password')),
-        'password1',
-      );
-      await tester.tap(find.byKey(const Key('sign-in-submit')));
-      await tester.pumpAndSettle();
+        await tester.enterText(
+          find.byKey(const Key('sign-in-email')),
+          'ann@example.com',
+        );
+        await tester.enterText(
+          find.byKey(const Key('sign-in-password')),
+          'password1',
+        );
+        await tester.tap(find.byKey(const Key('sign-in-submit')));
+        await tester.pumpAndSettle();
 
-      expect(location(container), AppRoutes.home);
-      expect(find.byKey(const Key('open-account')), findsOneWidget);
-    });
+        expect(location(container), AppRoutes.dashboard);
+        expect(find.byKey(const Key('open-account')), findsOneWidget);
+      },
+    );
 
     testWidgets('signing out from profile returns to sign-in', (tester) async {
       auth = MockFirebaseAuth(
@@ -187,7 +202,7 @@ void main() {
         mockUser: MockUser(uid: 'u1', email: 'ann@example.com'),
       );
       final container = await pumpApp(tester);
-      expect(location(container), AppRoutes.home);
+      expect(location(container), AppRoutes.dashboard);
 
       container.read(routerProvider).go(AppRoutes.profile);
       await tester.pumpAndSettle();
