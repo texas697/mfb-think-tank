@@ -90,9 +90,16 @@ git tag foss-vX.Y.Z && git push origin foss foss-vX.Y.Z
 ```
 
 Conflicts should only ever appear in `lib/features/auth/data/`,
-`lib/features/auth/application/auth_providers.dart` and `pubspec.yaml`. If a
-conflict shows up elsewhere, the Phase 1 seam has been broken — fix it on
-`main`.
+`lib/features/auth/application/auth_providers.dart` and `pubspec.yaml` (the
+build number). If a conflict shows up elsewhere, the Phase 1 seam has been
+broken — fix it on `main`.
+
+`.flutter-version`, `fastlane/metadata/android/`, `docs/FDROID.md` and the
+`docs/fdroid/` metadata template are kept identical on both branches. They
+exist for the F-Droid build, but `main` carries them too, so a release merge
+never surfaces them and F-Droid always builds the recipe it was reviewed
+against. If one of them conflicts, the branches have drifted — reconcile it on
+`main`, then re-merge.
 
 ### Build numbers on `foss`
 
